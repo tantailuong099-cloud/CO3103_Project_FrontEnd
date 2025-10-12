@@ -71,26 +71,18 @@ const mockProducts = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#1a1a1a]">
-      {/* TODO(navbar): Chèn <Navbar /> vào đây hoặc đưa vào app/layout.tsx */}
-      {/* <Navbar /> */}
+    <div className="space-y-24 pb-24 pt-12">
+      <Hero />
 
-      <main className="pt-16">
-        <Hero />
+      <ProductSection
+        title="FLASH SALE"
+        products={mockProducts}
+        variant="flash-sale"
+      />
 
-        <ProductSection
-          title="FLASH SALE"
-          products={mockProducts}
-          variant="flash-sale"
-        />
+      <ProductSection title="TOP PICKS FOU YOU" products={mockProducts} />
 
-        <ProductSection title="TOP PICKS FOU YOU" products={mockProducts} />
-
-        <ProductSection title="MOST POPULAR" products={mockProducts} />
-      </main>
-
-      {/* TODO(footer): Chèn <Footer /> vào đây hoặc đưa vào app/layout.tsx */}
-      {/* <Footer /> */}
+      <ProductSection title="MOST POPULAR" products={mockProducts} />
     </div>
   );
 }
