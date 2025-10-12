@@ -132,7 +132,7 @@ export default function FilterDropdown() {
       {/* Filter Button */}
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-2 px-4 py-2 rounded-[15px] text-[16px] font-medium transition-colors duration-200
+        className={`flex items-center gap-2 pl-[10px] pr-[30px] py-2 rounded-[10px] text-[16px] font-medium transition-colors duration-200
           ${open ? "bg-black text-white" : "bg-[#fa4d38] text-white hover:bg-[#ff5c47]"}`}
       >
         <Image src="/icon/filter.png" alt="Filter" width={18} height={18} />
@@ -141,7 +141,7 @@ export default function FilterDropdown() {
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute left-0 mt-2 w-[780px] bg-[#121212] border border-gray-700 rounded-[10px] shadow-lg p-4 z-50">
+        <div className="absolute left-0 mt-2 w-screen bg-[#121212] border border-gray-700 rounded-[10px] shadow-lg p-4 z-50">
           <div className="flex flex-col gap-4">
             {filterCategories.map((category) =>
               category.type === "input" ? (
