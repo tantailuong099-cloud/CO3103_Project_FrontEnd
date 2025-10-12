@@ -55,7 +55,6 @@ export default function Navbar() {
 
           {/* Logo */}
           <a href="/" className="flex items-center gap-2 select-none">
-            {/* Dùng next/image cho tối ưu; thay width/height theo logo của bạn */}
             <Image src={LOGO} alt="ARC logo" width={120} height={40} className="h-8 w-auto object-contain" />
           </a>
 
@@ -75,11 +74,10 @@ export default function Navbar() {
 
           {/* Right icons */}
           <div className="ml-auto md:ml-0 flex items-center gap-5">
-            <button aria-label="Cart" className="relative inline-flex items-center justify-center hover:text-[#FF6B35] transition-colors">
-              <IconCart className="h-6 w-6" />
-            </button>
-            <IconUser className="h-7 w-7 hidden sm:block" />
-            <IconUser className="h-7 w-7" />
+                <button aria-label="Cart" className="relative inline-flex items-center justify-center hover:text-[#FF6B35] transition-colors">
+                <IconCart className="h-6 w-6" />
+                </button>
+             <IconUser className="h-7 w-7" />
           </div>
         </div>
 
