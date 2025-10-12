@@ -1,109 +1,103 @@
-import Link from "next/link";
+"use client";
 
-const NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/search", label: "Discover" },
-  { href: "/deals", label: "Deals" },
-  { href: "/collections", label: "Collections" },
-];
+import Image from "next/image";
+import { useState } from "react";
+import type { SVGProps } from "react";
+
+const LOGO = "/logo.png"; // Đặt logo vào public/logo.png (hoặc đổi đường dẫn)
+
+const IconHamburger = (props: SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" {...props}>
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <line x1="3" y1="12" x2="21" y2="12" />
+    <line x1="3" y1="18" x2="21" y2="18" />
+  </svg>
+);
+
+const IconSearch = (props: SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx="11" cy="11" r="7" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+);
+
+const IconCart = (props: SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx="9" cy="21" r="1" />
+    <circle cx="20" cy="21" r="1" />
+    <path d="M1 1h4l2.68 12.39a2 2 0 0 0 2 1.61h7.72a2 2 0 0 0 2-1.61L23 6H6" />
+  </svg>
+);
+
+const IconUser = (props: SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M20 21a8 8 0 1 0-16 0" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+);
 
 export default function Navbar() {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#111014]/90 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-4">
-        <Link href="/" className="flex items-center gap-3 text-lg font-semibold uppercase">
-          <span className="rounded bg-gradient-to-br from-[#ff6f61] to-[#ff914d] px-3 py-1 text-sm tracking-widest text-black">
-            ARC
-          </span>
-          <span className="hidden text-sm tracking-[0.32em] text-white/80 sm:block">
-            Game Store
-          </span>
-        </Link>
+    <header className="w-full bg-[#1e1e1e] text-white">
+      <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
+        <div className="h-16 flex items-center gap-4">
+          {/* Mobile menu button */}
+          <button
+            aria-label="Open menu"
+            onClick={() => setOpen((v) => !v)}
+            className="inline-flex md:hidden items-center justify-center rounded-xl p-2 hover:bg-white/10"
+          >
+            <IconHamburger className="h-6 w-6" />
+          </button>
 
-        <nav className="hidden items-center gap-8 text-xs font-medium uppercase tracking-[0.3em] text-white/60 lg:flex">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="transition-colors hover:text-white"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+          {/* Logo */}
+          <a href="/" className="flex items-center gap-2 select-none">
+            {/* Dùng next/image cho tối ưu; thay width/height theo logo của bạn */}
+            <Image src={LOGO} alt="ARC logo" width={120} height={40} className="h-8 w-auto object-contain" />
+          </a>
 
-        <div className="flex items-center gap-3 text-white/70">
-          <button
-            type="button"
-            aria-label="Search games"
-            className="rounded-full border border-white/10 p-2 transition-colors hover:border-white/30 hover:text-white"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              className="h-5 w-5"
-            >
-              <path
-                d="M11 5a6 6 0 1 1-4.243 10.243l-2.83 2.83a1 1 0 0 1-1.414-1.414l2.83-2.83A6 6 0 0 1 11 5Z"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+          {/* Search (desktop) */}
+          <div className="ml-auto md:mx-8 flex-1 max-w-xl hidden md:flex">
+            <label className="flex w-full items-center gap-2 rounded-xl bg-black px-3 py-2 ring-1 ring-white/10 focus-within:ring-white/25">
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search..."
+                className="w-full bg-transparent text-sm text-gray-200 placeholder:text-gray-400 outline-none"
+                aria-label="Search"
               />
-            </svg>
-          </button>
-          <button
-            type="button"
-            aria-label="Open cart"
-            className="rounded-full border border-white/10 p-2 transition-colors hover:border-white/30 hover:text-white"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              className="h-5 w-5"
-            >
-              <path
-                d="M5 5h1.5l1.2 9h8.6l1.2-6H7"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <circle cx="10" cy="19" r="1.5" fill="currentColor" />
-              <circle cx="16" cy="19" r="1.5" fill="currentColor" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            aria-label="Account menu"
-            className="rounded-full border border-white/10 p-2 transition-colors hover:border-white/30 hover:text-white"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              className="h-5 w-5"
-            >
-              <circle
-                cx="12"
-                cy="9"
-                r="4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-              />
-              <path
-                d="M6 20c0-3.314 2.686-6 6-6s6 2.686 6 6"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
+              <IconSearch className="h-5 w-5" />
+            </label>
+          </div>
+
+          {/* Right icons */}
+          <div className="ml-auto md:ml-0 flex items-center gap-5">
+            <button aria-label="Cart" className="relative inline-flex items-center justify-center hover:text-[#FF6B35] transition-colors">
+              <IconCart className="h-6 w-6" />
+            </button>
+            <IconUser className="h-7 w-7 hidden sm:block" />
+            <IconUser className="h-7 w-7" />
+          </div>
         </div>
+
+        {/* Mobile search */}
+        {open && (
+          <div className="pb-3 md:hidden">
+            <label className="flex w-full items-center gap-2 rounded-xl bg-black px-3 py-2 ring-1 ring-white/10 focus-within:ring-white/25">
+              <IconSearch className="h-5 w-5" />
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search..."
+                className="w-full bg-transparent text-sm text-gray-200 placeholder:text-gray-400 outline-none"
+                aria-label="Search"
+              />
+            </label>
+          </div>
+        )}
       </div>
     </header>
   );

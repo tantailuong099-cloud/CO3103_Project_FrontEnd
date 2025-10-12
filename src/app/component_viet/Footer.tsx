@@ -1,92 +1,77 @@
-import Link from "next/link";
+import type { SVGProps } from "react";
 
-const FOOTER_LINK_GROUPS = [
-  {
-    title: "Discover",
-    links: [
-      { href: "/search", label: "Browse Games" },
-      { href: "/collections", label: "Collections" },
-      { href: "/deals", label: "Flash Sales" },
-      { href: "/new", label: "New Releases" },
-    ],
-  },
-  {
-    title: "Support",
-    links: [
-      { href: "/support", label: "Help Center" },
-      { href: "/support/contact", label: "Contact" },
-      { href: "/support/faq", label: "FAQ" },
-      { href: "/support/refunds", label: "Refund Policy" },
-    ],
-  },
-  {
-    title: "Company",
-    links: [
-      { href: "/about", label: "About ARC" },
-      { href: "/careers", label: "Careers" },
-      { href: "/press", label: "Press" },
-      { href: "/blog", label: "Blog" },
-    ],
-  },
-];
+const IconGlobe = (props: SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx="12" cy="12" r="10" />
+    <path d="M2 12h20" />
+    <path d="M12 2a15.3 15.3 0 0 0 0 20a15.3 15.3 0 0 0 0-20z" />
+  </svg>
+);
+
+const IconPhone = (props: SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.86 19.86 0 0 1 3.1 5.18A2 2 0 0 1 5 3h3a2 2 0 0 1 2 1.72c.12.9.31 1.77.57 2.6a2 2 0 0 1-.45 2.11l-1.27 1.27a16 16 0 0 0 6.86 6.86l1.27-1.27a2 2 0 0 1 2.11-.45c.83.26 1.7.45 2.6.57A2 2 0 0 1 22 16.92z" />
+  </svg>
+);
+
+const IconMail = (props: SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M4 4h16v16H4z" />
+    <path d="m22 6-10 7L2 6" />
+  </svg>
+);
 
 export default function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-[#08070b]">
-      <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-12 text-sm text-white/70 md:flex-row md:items-start md:justify-between">
-        <div className="max-w-sm space-y-4">
-          <div className="flex items-center gap-3 text-lg font-semibold uppercase text-white">
-            <span className="rounded bg-gradient-to-br from-[#ff6f61] to-[#ff914d] px-3 py-1 text-sm tracking-widest text-black">
-              ARC
-            </span>
-            <span className="tracking-[0.32em] text-white/70">
-              Game Store
-            </span>
+    <footer className="w-full bg-black text-white">
+      <div className="mx-auto w-full max-w-7xl px-4 md:px-6 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+          {/* Col 1: brand + blurb */}
+          <div>
+            <h3 className="text-2xl font-bold tracking-tight">ARC</h3>
+            <p className="mt-4 text-sm text-gray-200">
+              ARC brings all gamers together. Shop your favorite video games, explore new worlds,
+              and level up your collection — no matter what you play on.
+            </p>
           </div>
-          <p className="text-sm leading-relaxed text-white/50">
-            ARC brings every gamer together. Discover curated collections, keep up
-            with the latest releases, and build a library that travels with you
-            across every platform.
-          </p>
+
+          {/* Col 2: Contact us via */}
+          <div>
+            <h3 className="text-2xl font-bold tracking-tight">CONTACT US VIA</h3>
+            <ul className="mt-5 space-y-3 text-sm">
+              <li className="flex items-center gap-3">
+                <IconGlobe className="h-6 w-6" />
+                <a href="https://ARCshop.vn" target="_blank" rel="noreferrer" className="hover:underline">ARCshop.vn</a>
+              </li>
+              <li className="flex items-center gap-3">
+                <IconPhone className="h-6 w-6" />
+                <a href="tel:0123456789" className="hover:underline">0123 456 789</a>
+              </li>
+              <li className="flex items-center gap-3">
+                <IconMail className="h-6 w-6" />
+                <a href="mailto:arc_company@gmail.com" className="hover:underline">arc_company@gmail.com</a>
+              </li>
+              <li className="flex items-center gap-3">
+                <IconGlobe className="h-6 w-6" />
+                <span>ARC Official</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Col 3: Information */}
+          <div>
+            <h3 className="text-2xl font-bold tracking-tight">INFORMATION</h3>
+            <ul className="mt-5 space-y-3 text-sm">
+              <li><a href="#about" className="hover:underline">About ARC</a></li>
+              <li><a href="#support" className="hover:underline">Support</a></li>
+              <li><a href="#privacy" className="hover:underline">Privacy Policy</a></li>
+              <li><a href="#terms" className="hover:underline">Terms & Conditions</a></li>
+            </ul>
+          </div>
         </div>
 
-        <div className="grid flex-1 grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {FOOTER_LINK_GROUPS.map((group) => (
-            <div key={group.title} className="space-y-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white">
-                {group.title}
-              </p>
-              <ul className="space-y-3 text-sm text-white/50">
-                {group.links.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="transition-colors hover:text-white"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-6 text-xs text-white/40 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} ARC Game Store. All rights reserved.</p>
-          <div className="flex flex-wrap gap-4">
-            <Link href="/terms" className="transition-colors hover:text-white/70">
-              Terms of Service
-            </Link>
-            <Link href="/privacy" className="transition-colors hover:text-white/70">
-              Privacy Policy
-            </Link>
-            <Link href="/cookies" className="transition-colors hover:text-white/70">
-              Cookie Policy
-            </Link>
-          </div>
+        <div className="mt-10 border-t border-white/10 pt-6 text-center text-xs text-white/70">
+          © {new Date().getFullYear()} ARC. All rights reserved.
         </div>
       </div>
     </footer>
