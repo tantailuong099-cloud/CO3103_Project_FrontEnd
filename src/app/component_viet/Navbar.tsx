@@ -5,12 +5,10 @@ import { useState } from "react";
 import type { SVGProps } from "react";
 
 // 👉 import trực tiếp từ /public
-import LOGO from "public/icon/logo.png"; // đảm bảo đúng đúng tên: logo.png (chữ thường)
-
 
 <a href="/" className="flex items-center gap-2 select-none">
   {/* static import: Next biết sẵn width/height */}
-  <Image src={LOGO} alt="ARC logo" priority className="h-8 w-auto object-contain" />
+  <Image src="/icon/logo.png" alt="ARC logo" priority className="h-8 w-auto object-contain" />
 </a>
 
 const IconHamburger = (props: SVGProps<SVGSVGElement>) => (
@@ -62,7 +60,7 @@ export default function Navbar() {
 
           {/* Logo */}
           <a href="/" className="flex items-center gap-2 select-none">
-            <Image src={LOGO} alt="ARC logo" width={120} height={40} className="h-8 w-auto object-contain" />
+            <Image src="/icon/logo.png" alt="ARC logo" width={120} height={40} className="h-8 w-auto object-contain" />
           </a>
 
           {/* Search (desktop) */}
