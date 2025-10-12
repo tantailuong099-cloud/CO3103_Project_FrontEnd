@@ -87,15 +87,14 @@ export default function FilterDropdown() {
     },
     {
       title: "Player",
-      type: "input", // 👈 numeric input
+      type: "input", 
     },
     {
       title: "Age",
-      type: "input", // 👈 numeric input
+      type: "input", 
     },
   ];
 
-  // --- Close when clicking outside ---
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
