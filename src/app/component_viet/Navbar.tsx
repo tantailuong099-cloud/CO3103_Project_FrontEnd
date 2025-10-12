@@ -4,9 +4,8 @@ import Image from "next/image";
 import { useState } from "react";
 import type { SVGProps } from "react";
 
-import Image from "next/image";
 // 👉 import trực tiếp từ /public
-import LOGO from "@/public/icon/logo.png"; // đảm bảo đúng đúng tên: logo.png (chữ thường)
+import LOGO from "public/icon/logo.png"; // đảm bảo đúng đúng tên: logo.png (chữ thường)
 
 
 <a href="/" className="flex items-center gap-2 select-none">
