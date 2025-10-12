@@ -4,7 +4,15 @@ import Image from "next/image";
 import { useState } from "react";
 import type { SVGProps } from "react";
 
-const LOGO = "/logo.png"; // Đặt logo vào public/logo.png (hoặc đổi đường dẫn)
+import Image from "next/image";
+// 👉 import trực tiếp từ /public
+import LOGO from "@/public/icon/logo.png"; // đảm bảo đúng đúng tên: logo.png (chữ thường)
+
+
+<a href="/" className="flex items-center gap-2 select-none">
+  {/* static import: Next biết sẵn width/height */}
+  <Image src={LOGO} alt="ARC logo" priority className="h-8 w-auto object-contain" />
+</a>
 
 const IconHamburger = (props: SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" {...props}>

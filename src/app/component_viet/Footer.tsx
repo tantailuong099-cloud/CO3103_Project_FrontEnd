@@ -1,5 +1,8 @@
 import type { SVGProps } from "react";
 
+import Image from "next/image";
+import Logo from "@/public/icon/logo.png";
+
 const IconGlobe = (props: SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <circle cx="12" cy="12" r="10" />
@@ -26,12 +29,10 @@ export default function Footer() {
     <footer className="w-full bg-black text-white">
       <div className="mx-auto w-full max-w-7xl px-4 md:px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          {/* Col 1: brand + blurb */}
           <div>
-            <h3 className="text-2xl font-bold tracking-tight">ARC</h3>
+            <Image src={Logo} alt="ARC logo" priority className="h-11 w-auto object-contain" />
             <p className="mt-4 text-sm text-gray-200">
-              ARC brings all gamers together. Shop your favorite video games, explore new worlds,
-              and level up your collection — no matter what you play on.
+              ARC brings all gamers together...
             </p>
           </div>
 
