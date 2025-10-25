@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import ProductCard from "../component_vy/GameCardSample";
+import ProductCard from "../card/GameCardSample";
 
 interface Product {
   id: number;
@@ -115,6 +115,7 @@ export default function ProductSection({
                   <ProductCard
                     title={product.title}
                     subtitle={product.subtitle}
+                    genre={""}
                     price={product.price}
                     rating={product.rating}
                     image={product.image}

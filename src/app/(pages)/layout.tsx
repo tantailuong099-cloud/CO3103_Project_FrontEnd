@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import Navbar from "./component_viet/Navbar";
-import Footer from "./component_viet/Footer";
+import "../globals.css";
+import Navbar from "../components/pages/header/Navbar";
+import Footer from "../components/pages/footer/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,7 +16,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "ARC - Game Store",
-  description: "ARC brings all gamers together. Shop your favorite video games, explore new worlds, and level up your collection — no matter what you play on.",
+  description:
+    "ARC brings all gamers together. Shop your favorite video games, explore new worlds, and level up your collection — no matter what you play on.",
 };
 
 export default function RootLayout({
@@ -31,9 +32,7 @@ export default function RootLayout({
       >
         <div className="flex min-h-screen flex-col">
           <Navbar />
-          <main className="flex-1">
-            {children}
-          </main>
+          <main className="flex-1">{children}</main>
           <Footer />
         </div>
       </body>

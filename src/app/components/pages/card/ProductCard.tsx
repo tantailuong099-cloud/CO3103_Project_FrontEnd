@@ -2,18 +2,22 @@ import Image from "next/image";
 
 type CardProps = {
   title: string;
+  subtitle?: string | undefined;
   genre: string;
-  rating: number;
-  price: number;
+  rating: number | string;
+  price: number | string;
   image: string;
+  tags?: string[];
 };
 
 export default function CardLayout({
   title,
+  subtitle,
   genre,
   rating,
   price,
   image,
+  tags
 }: CardProps) {
   return (
     <div className="bg-neutral-800 rounded-xl shadow-[0px_0px_4px_2px_#1e1e1e] overflow-hidden w-[180px] p-3 flex flex-col">

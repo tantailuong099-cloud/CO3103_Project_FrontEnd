@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import FilterDropdown from "../component_vy/FilterBar";
-import SortedBy from "../component_vy/SortBar";
-import PaginationV3 from "../component_vy/pagination";
-import CardLayout from "../component_vy/GameCardSample";
+import FilterDropdown from "../../components/pages/bar/FilterBar";
+import SortedBy from "../../components/pages/bar/SortBar";
+import CardLayout from "@/app/components/pages/card/GameCardSample";
+import PaginationV3 from "@/app/components/pages/bar/pagination";
 
 export default function SearchPage() {
   // --- demo 30 games ---

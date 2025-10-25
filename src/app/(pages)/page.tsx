@@ -1,6 +1,6 @@
 //import Navbar from "./component_tuan/Navbar";
-import Hero from "./component_tuan/Hero";
-import ProductSection from "./component_tuan/ProductSection";
+import Hero from "../components/pages/section/Hero";
+import ProductSection from "../components/pages/section/ProductSection";
 //import Footer from "./component_tuan/Footer";
 
 const mockProducts = [
@@ -71,7 +71,7 @@ const mockProducts = [
 
 export default function Home() {
   return (
-    <div className="space-y-24 pb-24 pt-12">
+    <div className="space-y-24">
       <Hero />
 
       <ProductSection
