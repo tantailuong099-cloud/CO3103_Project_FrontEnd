@@ -1,6 +1,6 @@
 // src/services/api.ts
 const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"; // your NestJS URL
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000"; // your NestJS URL
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 

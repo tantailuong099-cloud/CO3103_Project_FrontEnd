@@ -53,7 +53,7 @@ export default function CardLayout({
           src={image}
           alt={title}
           fill
-          className="object-cover"
+          className="object-contain"
           sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
           priority
         />

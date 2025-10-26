@@ -47,7 +47,7 @@ export default function SearchPage() {
               id={item._id}
               title={item.name}
               price={item.price}
-              image={item.image}
+              image={item.avatar}
               genre={item.genre}
             />
           ))}
