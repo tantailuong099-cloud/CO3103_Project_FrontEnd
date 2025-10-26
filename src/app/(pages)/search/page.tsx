@@ -44,7 +44,7 @@ export default function SearchPage() {
           {products.map((item) => (
             <CardLayout
               key={item._id}
-              id={item._id}
+              id={item._id.toString()}
               title={item.name}
               price={item.price}
               image={item.avatar}

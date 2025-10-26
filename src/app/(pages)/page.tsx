@@ -1,7 +1,7 @@
 "use client";
 
-import Hero from "./components/pages/section/Hero";
-import ProductSection from "./components/pages/section/ProductSection";
+import Hero from "../components/pages/section/Hero";
+import ProductSection from "../components/pages/section/ProductSection";
 import { makeMockProducts } from "@/app/components/mockup/product";
 
 export default function Home() {
