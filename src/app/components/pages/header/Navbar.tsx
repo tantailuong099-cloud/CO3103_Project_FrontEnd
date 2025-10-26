@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { SVGProps } from "react";
 import Image from "next/image";
+import SideMenu from "@/app/components/pages/header/SideMenu";
+
 
 /* ----------------------------- Reusable Logo ----------------------------- */
 type LogoProps = {
@@ -175,23 +177,12 @@ export default function Navbar() {
       {menuOpen && (
         <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
           <div className="absolute inset-0 bg-black/50" onClick={() => setMenuOpen(false)} aria-hidden />
-          <aside className="absolute left-0 top-0 h-full w-72 max-w-[80vw] bg-[#151515] shadow-2xl ring-1 ring-white/10">
-            <div className="flex items-center justify-between px-4 h-16 border-b border-white/10">
-              <Logo width={110} height={36} className="h-9 w-auto" />
-              <button aria-label="Close menu" onClick={() => setMenuOpen(false)} className="p-2 rounded-lg hover:bg-white/10">
-                <IconX className="h-5 w-5" />
-              </button>
-            </div>
-            <nav className="px-4 py-3 text-sm">
-              <a href="#home" className="block rounded-lg px-3 py-2 hover:bg-white/10">Home</a>
-              <a href="#flash-sale" className="block rounded-lg px-3 py-2 hover:bg-white/10">Flash Sale</a>
-              <a href="#top-picks" className="block rounded-lg px-3 py-2 hover:bg-white/10">Top Picks</a>
-              <a href="#most-popular" className="block rounded-lg px-3 py-2 hover:bg-white/10">Most Popular</a>
-              <a href="#support" className="block rounded-lg px-3 py-2 hover:bg-white/10">Support</a>
-            </nav>
+          <aside className="absolute left-0 top-0 h-full w-[300px] max-w-[80vw] shadow-2xl ring-1 ring-white/10">
+            <SideMenu onClose={() => setMenuOpen(false)} />
           </aside>
         </div>
       )}
+
     </header>
   );
 }
