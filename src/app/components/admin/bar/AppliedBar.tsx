@@ -59,7 +59,7 @@ export default function AppliedBar({linktocreate}: AppliedBarProps) {
           <input
             type="text"
             placeholder="Tìm kiếm"
-            className="flex-1 border-0 outline-none font-bold text-[14px] placeholder:text-[#979797]"
+            className="flex-1 border-0 outline-none font-bold text-[14px] text-black placeholder:text-[#979797]"
           />
         </div>
 

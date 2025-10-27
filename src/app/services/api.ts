@@ -18,7 +18,7 @@ async function request<T>(
     },
     body: body ? JSON.stringify(body) : undefined,
     // If your backend uses cookie auth, also set:
-    // credentials: "include",
+    credentials: "include",
   });
 
   // Optional: throw for non-2xx to catch in UI

@@ -12,24 +12,57 @@ import {
   FaPowerOff,
 } from "react-icons/fa6";
 import { usePathname } from "next/navigation";
+import { api } from "@/app/services/api";
 
 export default function Sider() {
   const pathname = usePathname(); // Lấy URL hiện tại
 
   const mainMenu = [
     { icon: <FaGaugeHigh />, label: "Tổng quan", href: "/admin/dashboard" },
-    { icon: <FaTableCellsLarge />, label: "Quản lý danh mục", href: "/admin/categories" },
-    { icon: <FaTableList />, label: "Quản lý sản phẩm", href: "/admin/products" },
+    {
+      icon: <FaTableCellsLarge />,
+      label: "Quản lý danh mục",
+      href: "/admin/categories",
+    },
+    {
+      icon: <FaTableList />,
+      label: "Quản lý sản phẩm",
+      href: "/admin/products",
+    },
     { icon: <FaListCheck />, label: "Quản lý đơn hàng", href: "/admin/orders" },
     { icon: <FaUser />, label: "Quản lý người dùng", href: "/admin/users" },
-    { icon: <FaUserGroup />, label: "Thông tin liên hệ", href: "/admin/contacts" },
+    {
+      icon: <FaUserGroup />,
+      label: "Thông tin liên hệ",
+      href: "/admin/contacts",
+    },
   ];
 
   const settingsMenu = [
     { icon: <FaGear />, label: "Cài đặt chung", href: "/admin/settings" },
-    { icon: <FaUserGear />, label: "Thông tin cá nhân", href: "/admin/profile" },
+    {
+      icon: <FaUserGear />,
+      label: "Thông tin cá nhân",
+      href: "/admin/profile",
+    },
     { icon: <FaPowerOff />, label: "Đăng xuất", href: "/logout", logout: true },
   ];
+
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+
+     try {
+      // Gọi API logout (qua service axios)
+      await api.post("/api/auth/logout");
+
+      // Sau khi logout, reload hoặc redirect
+      window.location.href = "/admin/login";
+    } catch (err) {
+      console.error("Logout failed:", err);
+      window.location.href = "/admin/login"; // fallback
+    }
+    window.location.reload();
+  };
 
   return (
     <nav className="bg-white border-r border-gray-200 w-[260px] h-[calc(100vh-70px)] fixed top-[70px] left-0 overflow-y-auto">
@@ -86,11 +119,8 @@ export default function Sider() {
                       ? "bg-[#ff6f61] text-white before:content-[''] before:block before:w-[4.5px] before:h-full before:rounded-r-md before:bg-[#ff6f61] before:absolute before:top-0 before:-left-6"
                       : "text-gray-700 hover:bg-gray-100"
                   }
-                  ${
-                    item.logout
-                      ? "!text-[#F93C65] hover:bg-red-50"
-                      : ""
-                  }`}
+                  ${item.logout ? "!text-[#F93C65] hover:bg-red-50" : ""}`}
+                onClick={item.logout ? handleLogout : undefined}
               >
                 <span className="text-[16px] w-[16px]">{item.icon}</span>
                 {item.label}
