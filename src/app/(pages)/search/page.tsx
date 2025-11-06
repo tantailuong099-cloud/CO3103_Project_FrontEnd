@@ -40,7 +40,7 @@ export default function SearchPage() {
       ) : products.length === 0 ? (
         <p>No products found</p>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-4 md:grid-cols-6 gap-6">
           {products.map((item) => (
             <CardLayout
               key={item._id}

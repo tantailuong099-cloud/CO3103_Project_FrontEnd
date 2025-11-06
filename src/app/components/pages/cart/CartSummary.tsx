@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 
 const money = (n: number) =>
   `$${Math.max(0, n).toFixed(2).replace(/\.00$/, "")}`;
@@ -6,30 +7,26 @@ const money = (n: number) =>
 export type SummaryInput = {
   digitalSubtotal: number;
   physicalSubtotal: number;
-  // Optional coupon/discount logic could be extended here.
 };
 
 export default function CartSummary({
   digitalSubtotal,
   physicalSubtotal,
 }: SummaryInput) {
+  const router = useRouter(); // ✅ moved inside component
+
   const itemsSubtotal = digitalSubtotal + physicalSubtotal;
-
-  // ARC Discount rule (example):
-  // -$10 if subtotal >= $120, else -$0
   const arcDiscount = itemsSubtotal >= 120 ? 10 : 0;
-
   const total = Math.max(0, itemsSubtotal - arcDiscount);
 
   return (
-    <aside className="bg-white text-black rounded-[10px] p-4 w-full lg:w-[420px]">
+    <aside className="bg-white text-black rounded-[10px] p-6 w-full lg:w-[420px] h-fit ">
       <div className="border-b border-[#e5e5e5] pb-2 mb-2">
         <h3 className="text-lg font-semibold text-neutral-900">
           Order Summary
         </h3>
       </div>
 
-      {/* Subtotals */}
       <div className="space-y-2 text-sm text-neutral-700">
         <div className="flex justify-between">
           <span>Digital items Subtotal</span>
@@ -45,7 +42,6 @@ export default function CartSummary({
         </div>
       </div>
 
-      {/* Discounts */}
       <div className="mt-3 space-y-1 text-sm text-neutral-700">
         <div className="flex justify-between">
           <span>ARC Discount</span>
@@ -55,7 +51,6 @@ export default function CartSummary({
         </div>
       </div>
 
-      {/* Total */}
       <div className="mt-3 pt-3 border-t border-[#e5e5e5]">
         <div className="flex justify-between items-center">
           <span className="text-base font-semibold">Total</span>
@@ -65,15 +60,13 @@ export default function CartSummary({
         </div>
       </div>
 
-      {/* CTA */}
       <button
         className="mt-4 w-full bg-[#fe8c31] hover:bg-[#ff9330] text-white py-3 rounded-[12px] font-medium transition"
-        onClick={() => alert("Proceed to payment")}
+        onClick={() => router.push("/checkout")}
       >
         Continue Payment
       </button>
 
-      {/* Small note */}
       <p className="mt-2 text-xs text-neutral-500">
         Taxes and shipping calculated at checkout.
       </p>

@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
+        hostname: "shared.akamai.steamstatic.com",
+      },
+      {
+        protocol: "https",
         hostname: "cdn.akamai.steamstatic.com",
         port: "",
         pathname: "/**", // Cho phép tất cả các đường dẫn ảnh từ host này

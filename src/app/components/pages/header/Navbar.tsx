@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { SVGProps } from "react";
 import Image from "next/image";
@@ -80,6 +81,7 @@ const IconX = (props: SVGProps<SVGSVGElement>) => (
 
 /* -------------------------------- Navbar -------------------------------- */
 export default function Navbar() {
+  const router = useRouter(); 
   const [q, setQ] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -120,7 +122,8 @@ export default function Navbar() {
 
           {/* Right icons */}
           <div className="ml-auto md:ml-0 relative flex items-center gap-5">
-            <button aria-label="Cart" className="relative inline-flex items-center justify-center hover:text-white/80 transition-colors">
+            <button aria-label="Cart" className="relative inline-flex items-center justify-center hover:text-white/80 transition-colors"
+            onClick={() => router.push("/cart")}>
               <IconCart className="h-6 w-6" />
             </button>
 

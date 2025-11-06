@@ -30,7 +30,7 @@ export default function DetailSection({ product }: { product: any }) {
   ];
 
   // Sửa: Lấy mô tả từ `product.description`
-  const allParagraphs = product.description 
+  const allParagraphs = product.description
     ? product.description.split('\n').filter((p: string) => p.trim() !== "") 
     : ["No description available."];
   
@@ -76,12 +76,12 @@ export default function DetailSection({ product }: { product: any }) {
       </div>
 
       {/* Story Section (SỬA DATA) */}
-      <div className="relative w-full overflow-hidden rounded-lg">
+      <div className="relative w-full h-150 overflow-hidden rounded-lg">
         {/* Background (SỬA IMAGE) */}
         <div className="absolute inset-0">
           <Image
             // Dùng ảnh đầu tiên trong gallery hoặc avatar làm nền
-            src={product.productImage?.[0] || product.avatar || "/images/silksong_story_bg.webp"}
+            src={product.productImage?.[1] || product.avatar || "/images/silksong_story_bg.webp"}
             alt="Story Section Background"
             fill
             className="object-cover opacity-50"

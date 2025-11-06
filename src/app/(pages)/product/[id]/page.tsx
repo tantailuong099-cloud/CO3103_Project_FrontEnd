@@ -14,30 +14,37 @@ export default function ProductDetailPage() {
   const [related, setRelated] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchProduct() {
-      try {
-        setLoading(true);
-        // ✅ 1. Fetch product details
-        const data = await api.get(`/api/product/${id}`);
-        setProduct(data);
+useEffect(() => {
+  async function fetchProduct() {
+    try {
+      setLoading(true);
 
-        // ✅ 2. Fetch related products (same category)
-        if (data?.category?._id || data?.category) {
-          const catId = data.category._id || data.category;
-          const res = await api.get(`/api/categories/${catId}`);
-          setRelated(res.filter((item: any) => item._id !== data._id).slice(0, 6));
-        }
-      } catch (err) {
-        console.error(err);
-        setProduct(null); // triggers 404
-      } finally {
-        setLoading(false);
+      // ✅ data is already the product
+      const data = await api.get(`/api/product/${id}`);
+      setProduct(data);
+
+      // ✅ Get related products
+      const catId = data?.category?._id;
+      if (catId) {
+        const res = await api.get(`/api/categories/${catId}`);
+        setRelated(
+          res
+            .filter((item: any) => item._id !== data._id)
+            .slice(0, 6)
+        );
       }
-    }
 
-    fetchProduct();
-  }, [id]);
+    } catch (err) {
+      console.error(err);
+      setProduct(null);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  fetchProduct();
+}, [id]);
+
 
   if (!loading && !product) return notFound(); // Show 404 if product not found
 
@@ -58,7 +65,7 @@ export default function ProductDetailPage() {
       )}
 
       {/* ---- Product Details Section ---- */}
-      <div className="mt-16 px-6 md:px-12">
+      <div className="mt-16 px-0 md:px-0">
         <DetailSection product={product} />
       </div>
 

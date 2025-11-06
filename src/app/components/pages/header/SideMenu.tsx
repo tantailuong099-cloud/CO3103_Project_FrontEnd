@@ -71,7 +71,6 @@ export default function SideMenu({ onClose }: { onClose: () => void }) {
             label={f.title}
             iconRight={<ChevronDown size={16} />}
             onClick={() => setOpenPanel(f.title)}
-            highlight={f.title === "Genre"}
           />
         ))}
 
