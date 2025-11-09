@@ -1,22 +1,13 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   reactStrictMode: true,
   images: {
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "shared.akamai.steamstatic.com",
-      },
-      {
-        protocol: "https",
-        hostname: "cdn.akamai.steamstatic.com",
-        port: "",
-        pathname: "/**", // Cho phép tất cả các đường dẫn ảnh từ host này
-      },
-      // ... bạn có thể thêm các host khác ở đây
+      { protocol: 'https', hostname: 'shared.akamai.steamstatic.com' },
+      { protocol: 'https', hostname: 'cdn.akamai.steamstatic.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'res.cloudinary.com', pathname: '/**' }
     ],
+    // hoặc dùng "domains": ['res.cloudinary.com', 'shared.akamai.steamstatic.com', 'cdn.akamai.steamstatic.com']
   },
 };
 

@@ -49,6 +49,7 @@ export default function SearchPage() {
               price={item.price}
               image={item.avatar}
               genre={item.genre}
+              rating = {item.metacriticScore}
             />
           ))}
         </div>

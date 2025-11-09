@@ -1,7 +1,9 @@
 "use client";
-
+import { useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import { useRef } from "react";
-import ProductCard from "../card/GameCardSample";
+import CardLayout from "@/app/components/pages/card/GameCardSample";
+import { api } from "@/app/services/api";
 
 interface Product {
   id: number;
@@ -22,7 +24,6 @@ interface ProductSectionProps {
 
 export default function ProductSection({
   title,
-  products,
   variant = "default",
 }: ProductSectionProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -39,6 +40,28 @@ export default function ProductSection({
       behavior: "smooth",
     });
   };
+    const params = useSearchParams();
+  
+    const [products, setProducts] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+  
+    useEffect(() => {
+  
+      const fetchData = async () => {
+        try {
+          setLoading(true);
+          // ✅ Call your backend: /api/categories/Action
+          const data = await api.get(`/api/product`);
+          setProducts(data);
+        } catch (error) {
+          console.error("Error loading products:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchData();
+    });
 
   return (
     <section className="py-8 md:py-12">
@@ -95,26 +118,22 @@ export default function ProductSection({
 
           {/* Scrollable Product Row */}
           <div ref={scrollContainerRef} className="overflow-x-auto scrollbar-hide scroll-smooth">
-            <div className="flex gap-4 pb-4 p-4">
-              {products.map((product) => (
-                <div key={product.id} className="flex-shrink-0 w-48 md:w-52">
-                  <ProductCard
-                    title={product.title}
-                    subtitle={product.subtitle}
-                    genre={product.genre || []}
-                    image={product.image}
-                    tags={product.tags}
-                    price={product.price}
-                    rating={
-                      typeof product.rating === "number"
-                        ? product.rating.toFixed(1)
-                        : product.rating
-                    }
+            <div className="flex gap-4 p-4">
+              {products.map((item) => (
+                <div key={item._id} className="flex-shrink-0 w-[200px]">   {/* thêm dòng này */}
+                  <CardLayout
+                    id={item._id.toString()}
+                    title={item.name}
+                    price={item.price}
+                    image={item.avatar}
+                    genre={item.genre}
+                    rating={item.metacriticScore}
                   />
                 </div>
               ))}
             </div>
           </div>
+
 
           {/* Right Arrow */}
           <button

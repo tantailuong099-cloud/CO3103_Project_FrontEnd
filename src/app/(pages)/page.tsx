@@ -16,7 +16,6 @@ export default function Home() {
 
       <ProductSection
         title="FLASH SALE"
-        products={products}
         variant="flash-sale"
       />
 
