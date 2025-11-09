@@ -1,15 +1,24 @@
+"use client";
 import AddressBox from "@/app/components/pages/checkout/AddressBox";
 import OrderSummary from "@/app/components/pages/checkout/OrderSummary";
 import PaymentMethods from "@/app/components/pages/checkout/PaymentMethods";
-import { makeMockProducts } from "@/app/components/mockup/product";
-import { makeMockOrderItems } from "@/app/components/mockup/orderItem";
+
+import { useEffect, useState } from "react";
+
 
 
 export default function CheckoutPage() {
-  const products = makeMockProducts(12, { seed: 7 });
-  const items = makeMockOrderItems(4, products, 42);
+  const [checkoutItems, setCheckoutItems] = useState<any[]>([]);
 
-  const totals = items.reduce(
+  useEffect(() => {
+    const stored = localStorage.getItem("CHECKOUT_ITEMS");
+    if (stored) {
+      setCheckoutItems(JSON.parse(stored));
+    }
+  }, []); 
+  
+
+  const totals = checkoutItems.reduce(
     (acc, it) => {
       const finalUnit = Math.max(0, it.price - (it.discount ?? 0));
       const rowSubtotal = finalUnit * it.quantity;
@@ -31,7 +40,7 @@ export default function CheckoutPage() {
           street="123 ABC street"
           city="HCM City"
         />
-        <OrderSummary items={items} />
+        <OrderSummary items={checkoutItems} />
       </div>
 
       <div className="w-full lg:w-[420px]">

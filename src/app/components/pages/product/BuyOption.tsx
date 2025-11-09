@@ -56,7 +56,6 @@ export default function BuyOption({ product }: { product: any }) {
         api.post("/api/cart/add", {
           productId: _id,
           quantity: qty,
-        
         });
         alert("✅ Added to cart!");
       } catch (err) {

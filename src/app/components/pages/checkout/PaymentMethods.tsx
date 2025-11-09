@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
+import { api } from "@/app/services/api";
 
 const money = (n: number) =>
   `$${Math.max(0, n).toFixed(2).replace(/\.00$/, "")}`;
@@ -14,6 +15,26 @@ export default function PaymentPanel({
 }) {
   const [selected, setSelected] = useState<PaymentMethod>("MOMO");
   const [showSuccess, setShowSuccess] = useState(false);
+
+  const handleCheckout = async () => {
+    try {
+      const stored = localStorage.getItem("CHECKOUT_ITEMS");
+      if (!stored) return;
+
+      const selectedItems = JSON.parse(stored) as { id: string; quantity: number }[];
+      const productIds = selectedItems.map((i) => i.id);
+
+      await api.post("/api/order/checkout/partial", { productIds });
+
+      // Xóa checkout local
+      localStorage.removeItem("CHECKOUT_ITEMS");
+
+      setShowSuccess(true);
+    } catch (err) {
+      console.error("Checkout error:", err);
+      alert("Checkout failed!");
+    }
+  };
 
   const baseBtn =
     "w-full py-3 px-4 rounded-xl border bg-[#1c1c1c] text-[#e5e5e5] transition flex items-center justify-between";
@@ -41,19 +62,14 @@ export default function PaymentPanel({
           </div>
         </div>
 
-        {/* Payment Title */}
+        {/* Payment Method */}
         <h3 className="text-white text-lg font-semibold">Payment Method</h3>
 
-        {/* Radio Buttons */}
         <div className="space-y-3">
-          {/* MOMO */}
           <button
             type="button"
             onClick={() => setSelected("MOMO")}
-            className={[
-              baseBtn,
-              selected === "MOMO" ? "border-[#fe8c31] ring-1 ring-[#fe8c31]/40" : "border-[#3a3a3a]",
-            ].join(" ")}
+            className={[baseBtn, selected === "MOMO" ? "border-[#fe8c31] ring-1 ring-[#fe8c31]/40" : "border-[#3a3a3a]"].join(" ")}
           >
             <span className={leftWrap}>
               <Image src="/icon/momo.svg" alt="MOMO" width={30} height={30} />
@@ -61,14 +77,10 @@ export default function PaymentPanel({
             </span>
           </button>
 
-          {/* ZaloPay */}
           <button
             type="button"
             onClick={() => setSelected("ZALOPAY")}
-            className={[
-              baseBtn,
-              selected === "ZALOPAY" ? "border-[#fe8c31] ring-1 ring-[#fe8c31]/40" : "border-[#3a3a3a]",
-            ].join(" ")}
+            className={[baseBtn, selected === "ZALOPAY" ? "border-[#fe8c31] ring-1 ring-[#fe8c31]/40" : "border-[#3a3a3a]"].join(" ")}
           >
             <span className={leftWrap}>
               <Image src="/icon/zalo.png" alt="ZaloPay" width={30} height={30} />
@@ -77,47 +89,30 @@ export default function PaymentPanel({
           </button>
         </div>
 
-        {/* Continue Payment → Opens Modal */}
         <button
-          onClick={() => setShowSuccess(true)}
+          onClick={handleCheckout}
           className="bg-[#fe8c31] hover:bg-[#ff9d4f] transition text-white w-full py-3 rounded-[12px] font-medium text-center"
         >
           Continue Payment
         </button>
       </div>
 
-      {/* ✅ SUCCESS MODAL */}
+      {/* SUCCESS MODAL */}
       {showSuccess && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#181818] border border-[#2a2a2a] rounded-2xl p-8 w-full max-w-md text-center space-y-6 animate-fadeIn">
-            {/* Illustration */}
             <div className="w-24 h-24 mx-auto">
-              <Image
-                src="/icon/checked.png"
-                width={96}
-                height={96}
-              />
+              <Image src="/icon/checked.png" width={96} height={96} alt="success" />
             </div>
-
-            {/* Message */}
             <h2 className="text-white text-xl font-bold">THANK YOU FOR ORDERING!</h2>
             <p className="text-[#bdbdbd] text-sm leading-relaxed">
-              We will be sending you an email confirmation to{" "}
-              <span className="text-white font-semibold">vanan@gmail.com</span> shortly.
+              A confirmation email will be sent shortly.
             </p>
-
-            {/* Buttons */}
             <div className="flex gap-3 pt-4">
-              <a
-                href="/orders"
-                className="flex-1 text-center py-3 rounded-xl bg-[#1c1c1c] border border-[#3a3a3a] text-white hover:border-[#fe8c31] transition"
-              >
+              <a href="/orders" className="flex-1 text-center py-3 rounded-xl bg-[#1c1c1c] border border-[#3a3a3a] text-white hover:border-[#fe8c31] transition">
                 View Order
               </a>
-              <a
-                href="/"
-                className="flex-1 text-center py-3 rounded-xl bg-[#FA4D38] hover:bg-[#ff9d4f] text-white transition"
-              >
+              <a href="/" className="flex-1 text-center py-3 rounded-xl bg-[#FA4D38] hover:bg-[#ff9d4f] text-white transition">
                 Continue Shopping
               </a>
             </div>

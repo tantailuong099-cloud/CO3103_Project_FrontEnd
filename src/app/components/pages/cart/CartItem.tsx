@@ -3,36 +3,28 @@
 import Image from "next/image";
 
 export type CartItem = {
-  id: number;
-  title: string;
-  image: string;
-  platform: "PS5" | "Nintendo Switch 2" | "XBOX" | "PC";
-  version: string;
-  price: number;          // base price
-  discount?: number | null; // numeric amount off (e.g. 3 -> $3 off)
-  quantity: number;
-  isDigital: boolean;
-  selected: boolean;
+  id: string;              // product._id
+  title: string;           // product.name
+  image: string;           // product.avatar
+  version: string;         // product.version
+  price: number;           // product.price
+  quantity: number;        // quantity in cart
+  isDigital: boolean;      // product.type === 'digital'
+  selected: boolean;       // UI selection
 };
 
 export type CartItemProps = {
   item: CartItem;
-  onToggle: (id: number) => void;
-  onQty: (id: number, qty: number) => void;
-  onDelete: (id: number) => void;
+  onToggle: (id: string) => void;
+  onQty: (id: string, qty: number) => void;
+  onDelete: (id: string) => void;
 };
 
-const money = (n: number) =>
-  `$${Math.max(0, n).toFixed(2).replace(/\.00$/, "")}`;
+const nf = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
+const money = (n: number) => nf.format(Math.max(0, n));
 
-export default function CartItemRow({
-  item,
-  onToggle,
-  onQty,
-  onDelete,
-}: CartItemProps) {
-  const finalUnit = Math.max(0, item.price - (item.discount ?? 0));
-  const rowSubtotal = finalUnit * item.quantity;
+export default function CartItemRow({ item, onToggle, onQty, onDelete }: CartItemProps) {
+  const rowSubtotal = item.price * item.quantity;
 
   return (
     <div className="bg-[#1e1e1e] rounded-[10px] p-4 w-full">
@@ -48,9 +40,9 @@ export default function CartItemRow({
         </label>
 
         {/* Image */}
-        <div className="relative w-[110px] h-[150px] rounded-md overflow-hidden shrink-0">
+        <div className="relative w-[110px] h-[150px] rounded-md overflow-hidden shrink-0 bg-black/40">
           <Image
-            src={item.image}
+            src={item.image || "/images/placeholder.png"}
             alt={item.title}
             fill
             className="object-cover"
@@ -58,52 +50,33 @@ export default function CartItemRow({
           />
         </div>
 
-        {/* Middle: title, platform, version */}
-        <div className="flex-1">
-          <p className="text-white text-base font-semibold line-clamp-2">
-            {item.title}
-          </p>
+        {/* Middle: title, type, version */}
+        <div className="flex-1 min-w-0">
+          <p className="text-white text-base font-semibold line-clamp-2">{item.title}</p>
 
           <div className="mt-2 inline-flex items-center gap-2">
-            <span className="bg-[#fa4d38] text-white text-xs px-2 py-1 rounded">
-              {item.platform}
+            <span
+              className={`${
+                item.isDigital ? "bg-[#2563eb]" : "bg-[#fa4d38]"
+              } text-white text-xs px-2 py-1 rounded`}
+              title={item.isDigital ? "Digital" : "Physical"}
+            >
+              {item.isDigital ? "Digital" : "Physical"}
             </span>
-            <div className="bg-black text-[#dedddd] text-sm px-3 py-2 rounded-[10px] inline-flex items-center gap-2">
-              <span className="font-medium">{item.version}</span>
-              <svg
-                width="10"
-                height="6"
-                viewBox="0 0 10 6"
-                fill="none"
-                className="opacity-70"
-              >
-                <path
-                  d="M9 1L5 5L1 1"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
+
+            {item.version ? (
+              <div className="bg-black text-[#dedddd] text-sm px-3 py-2 rounded-[10px] inline-flex items-center gap-2">
+                <span className="font-medium">{item.version}</span>
+                <svg width="10" height="6" viewBox="0 0 10 6" fill="none" className="opacity-70">
+                  <path d="M9 1L5 5L1 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            ) : null}
           </div>
 
-          {/* Price small stack (mobile) */}
+          {/* Price small (mobile) */}
           <div className="mt-2 flex gap-2 items-end lg:hidden">
-            {item.discount ? (
-              <>
-                <span className="text-[#bababa] line-through text-sm">
-                  {money(item.price)}
-                </span>
-                <span className="text-white text-base font-semibold">
-                  {money(finalUnit)}
-                </span>
-              </>
-            ) : (
-              <span className="text-white text-base font-semibold">
-                {money(item.price)}
-              </span>
-            )}
+            <span className="text-white text-base font-semibold">{money(item.price)}</span>
           </div>
         </div>
 
@@ -111,20 +84,7 @@ export default function CartItemRow({
         <div className="flex flex-col items-end gap-2 shrink-0">
           {/* Price big (desktop) */}
           <div className="hidden lg:flex items-baseline gap-2">
-            {item.discount ? (
-              <>
-                <span className="text-[#bababa] line-through text-sm">
-                  {money(item.price)}
-                </span>
-                <span className="text-white text-lg font-semibold">
-                  {money(finalUnit)}
-                </span>
-              </>
-            ) : (
-              <span className="text-white text-lg font-semibold">
-                {money(item.price)}
-              </span>
-            )}
+            <span className="text-white text-lg font-semibold">{money(item.price)}</span>
           </div>
 
           {/* Qty */}
@@ -137,7 +97,7 @@ export default function CartItemRow({
             >
               −
             </button>
-            <div className="size-[30px] rounded-lg bg-white text-black grid place-items-center font-medium min-w-[38px]">
+            <div className="min-w-[38px] h-[30px] rounded-lg bg-white text-black grid place-items-center font-medium px-2">
               {item.quantity}
             </div>
             <button
@@ -161,9 +121,7 @@ export default function CartItemRow({
           {/* Subtotal */}
           <div className="mt-1 flex items-center gap-2">
             <span className="text-[#bababa] text-sm">Subtotal:</span>
-            <span className="text-white text-lg font-semibold">
-              {money(rowSubtotal)}
-            </span>
+            <span className="text-white text-lg font-semibold">{money(rowSubtotal)}</span>
           </div>
         </div>
       </div>

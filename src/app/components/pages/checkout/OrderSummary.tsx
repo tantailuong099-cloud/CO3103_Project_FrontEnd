@@ -1,10 +1,9 @@
 import Image from "next/image";
-import type { MockOrderItem } from "@/app/components/mockup/orderItem";
-
+import type { CartItem } from "../cart/CartItem";
 const money = (n: number) =>
   `$${Math.max(0, n).toFixed(2).replace(/\.00$/, "")}`;
 
-export default function OrderItemsPanel({ items }: { items: MockOrderItem[] }) {
+export default function OrderItemsPanel({ items }: { items: CartItem[] }) {
   return (
     <div className="bg-[#141414] rounded-2xl border border-[#2a2a2a] overflow-hidden">
       <div className="px-5 py-4 border-b border-[#2a2a2a] flex items-center justify-between">
@@ -14,17 +13,17 @@ export default function OrderItemsPanel({ items }: { items: MockOrderItem[] }) {
 
       <div className="p-5 space-y-4">
         {items.map((item) => {
-          const finalUnit = Math.max(0, item.price - (item.discount ?? 0));
+          const finalUnit = Math.max(0, item.price - (0));
           const rowSubtotal = finalUnit * item.quantity;
 
           return (
-            <div key={item.orderItemId} className="bg-[#1e1e1e] rounded-xl p-4">
+            <div key={item.id} className="bg-[#1e1e1e] rounded-xl p-4">
               <div className="flex gap-4">
                 {/* image */}
                 <div className="relative w-[90px] h-[120px] rounded-md overflow-hidden shrink-0">
                   <Image
                     src={item.image}
-                    alt={item.title}
+                    alt={item.image}
                     fill
                     className="object-cover"
                     sizes="90px"
@@ -38,9 +37,6 @@ export default function OrderItemsPanel({ items }: { items: MockOrderItem[] }) {
                   </p>
 
                   <div className="mt-2 flex items-center gap-2">
-                    <span className="bg-[#fa4d38] text-white text-xs px-2 py-1 rounded">
-                      {item.platform}
-                    </span>
                     <div className="bg-black text-[#dedddd] text-sm px-3 py-2 rounded-[10px]">
                       {item.version}
                     </div>
@@ -54,20 +50,11 @@ export default function OrderItemsPanel({ items }: { items: MockOrderItem[] }) {
 
                 {/* right */}
                 <div className="flex flex-col items-end shrink-0 gap-1">
-                  {item.discount ? (
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-[#bababa] line-through text-sm">
-                        {money(item.price)}
-                      </span>
-                      <span className="text-white text-lg font-semibold">
-                        {money(finalUnit)}
-                      </span>
-                    </div>
-                  ) : (
+                  {
                     <span className="text-white text-lg font-semibold">
                       {money(item.price)}
                     </span>
-                  )}
+                  }
 
                   <div className="text-[#bababa] text-sm">
                     Qty:{" "}
