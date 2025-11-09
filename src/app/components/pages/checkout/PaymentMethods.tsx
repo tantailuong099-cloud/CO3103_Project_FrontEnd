@@ -17,24 +17,27 @@ export default function PaymentPanel({
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleCheckout = async () => {
-    try {
-      const stored = localStorage.getItem("CHECKOUT_ITEMS");
-      if (!stored) return;
-
-      const selectedItems = JSON.parse(stored) as { id: string; quantity: number }[];
-      const productIds = selectedItems.map((i) => i.id);
-
-      await api.post("/api/order/checkout/partial", { productIds });
-
-      // Xóa checkout local
-      localStorage.removeItem("CHECKOUT_ITEMS");
-
-      setShowSuccess(true);
-    } catch (err) {
-      console.error("Checkout error:", err);
-      alert("Checkout failed!");
+  try {
+    const stored = localStorage.getItem("CHECKOUT_ITEMS");
+    if (!stored) {
+      alert("⚠️ No items selected for checkout!");
+      return;
     }
-  };
+
+    const selectedItems = JSON.parse(stored) as { id: string; quantity: number }[];
+    const productIds = selectedItems.map((i) => i.id);
+
+    const res = await api.post("/api/order/checkout/partial", { productIds });
+    console.log("✅ Checkout success:", res);
+
+    localStorage.removeItem("CHECKOUT_ITEMS");
+    setShowSuccess(true);
+  } catch (err: any) {
+    console.error("❌ Checkout error:", err.message || err);
+    alert(`Checkout failed: ${err.message || "Unknown error"}`);
+  }
+};
+
 
   const baseBtn =
     "w-full py-3 px-4 rounded-xl border bg-[#1c1c1c] text-[#e5e5e5] transition flex items-center justify-between";

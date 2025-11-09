@@ -8,7 +8,7 @@ import { api } from "@/app/services/api"; // ← dùng cùng wrapper với Produ
 export default function CartPage() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const [viewFilter, setViewFilter] = useState<"All" | "Digital" | "Physical">("All");
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -28,32 +28,30 @@ export default function CartPage() {
   // tải cart detail từ API (KHÔNG mock)
   const load = async () => {
     try {
-      setErr(null);
       setLoading(true);
+      setError(null);
 
-      // ✅ api.get trả về JSON data trực tiếp (giống ProductDetail)
-      // /cart/detail trả về mảng product + quantity theo service của bạn
-      const detail = await api.get<any[]>("/api/cart/detail");
-
-      const mapped: CartItem[] = (detail || []).map((p) => ({
-        id: String(p._id),          // <- string để khớp Mongo _id
+      const data = await api.get<any[]>("/api/cart/detail"); // <- backend trả về mảng item
+      const mapped: CartItem[] = data.map((p) => ({
+        id: p._id,
         title: p.name,
-        image: p.avatar,            // <- lấy ảnh từ avatar
-        version: p.version ?? "",
-        price: Number(p.price ?? 0),
-        quantity: Number(p.quantity ?? 0),
-        isDigital: String(p.type) === "digital",
+        image: p.avatar,
+        price: p.price,
+        version: p.version,
+        quantity: p.quantity,
+        isDigital: p.type === "digital",
         selected: true,
       }));
-
       setItems(mapped);
-    } catch (e: any) {
-      setErr(e?.message || "Failed to load cart");
+    } catch (err: any) {
+      console.error("❌ Cart load error:", err);
+      if (err.message.includes("401"))
+        setError("Bạn chưa đăng nhập! Vui lòng đăng nhập để xem giỏ hàng.");
+      else setError("Không thể tải giỏ hàng.");
     } finally {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     load();
   }, []);
@@ -80,32 +78,25 @@ export default function CartPage() {
 
   // PATCH /cart/update/:productId  { quantity }
   const setQty = async (id: string, qty: number) => {
+    setItems((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, quantity: qty } : it))
+    );
     try {
-      // optimistic UI
-      setItems((prev) => prev.map((it) => (it.id === id ? { ...it, quantity: qty } : it)));
-
       await api.patch(`/api/cart/update/${id}`, { quantity: qty });
-
-      // đồng bộ lại với server (trường hợp backend có logic tính subtotal…)
-      await load();
-    } catch (e: any) {
-      setErr(e?.message || "Failed to update quantity");
-      await load(); // rollback
+    } catch {
+      setError("Cập nhật số lượng thất bại.");
+      load(); // rollback
     }
   };
 
   // DELETE /cart/remove/:productId
   const del = async (id: string) => {
+    setItems((prev) => prev.filter((it) => it.id !== id));
     try {
-      // optimistic UI
-      setItems((prev) => prev.filter((it) => it.id !== id));
-
       await api.del(`/api/cart/remove/${id}`);
-
-      await load();
-    } catch (e: any) {
-      setErr(e?.message || "Failed to remove item");
-      await load();
+    } catch {
+      setError("Xóa sản phẩm thất bại.");
+      load(); // rollback
     }
   };
 
@@ -116,7 +107,7 @@ export default function CartPage() {
         <div className="mb-1 text-2xl font-medium">SHOPPING CART</div>
         <div className="text-[#bababa]">
           {loading ? "Loading…" : `You have ${items.length} items in your cart.`}
-          {err ? <span className="ml-2 text-red-400">({err})</span> : null}
+          {error ? <span className="ml-2 text-red-400">({error})</span> : null}
         </div>
 
         {/* Filter bar */}
