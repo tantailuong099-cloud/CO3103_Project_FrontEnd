@@ -46,9 +46,9 @@ export default function AdminLoginPage() {
           <Image src="/icon/logo.png" alt="ARC Logo" width={160} height={50} />
         </div>
 
-        <h1 className="text-2xl font-semibold text-center mb-6">
-          Welcome back
-        </h1>
+        {/* <h1 className="text-2xl font-semibold text-center mb-6">
+          Welcome back Admin
+        </h1> */}
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
