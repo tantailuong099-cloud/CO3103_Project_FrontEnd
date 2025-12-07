@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Edit3, Trash2, RefreshCcw, AlertCircle, Tv } from "lucide-react";
+// 1. Import thêm icon RotateCcw cho nút Restore
+import { Trash2, RefreshCcw, AlertCircle, Tv, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/app/services/api";
@@ -75,12 +76,13 @@ export default function ProductList({ onEdit, onDelete }: ProductTableProps) {
       setLoading(true);
       setError(null);
       const data = await api.get<Product[] | { data: Product[] }>(
-        "/api/product"
+        "/api/product/trash"
       );
       const productsData = Array.isArray(data)
         ? data
         : (data as any).data || [];
-      setProductList(productsData.filter((p: Product) => !p.deleted));
+
+      setProductList(productsData);
     } catch (err: any) {
       console.error("Lỗi fetch products:", err);
       const errorMessage = err.message || "";
@@ -102,31 +104,50 @@ export default function ProductList({ onEdit, onDelete }: ProductTableProps) {
     fetchProducts();
   }, []);
 
-  const handleDelete = async (product: Product) => {
-    // 1. Xác nhận với người dùng
-    const confirmDelete = window.confirm(
-      `Bạn có chắc chắn muốn xóa sản phẩm "${product.name}" không?`
+  // --- 2. HÀM KHÔI PHỤC (RESTORE) ---
+  const handleRestore = async (product: Product) => {
+    const confirmRestore = window.confirm(
+      `Bạn có muốn khôi phục sản phẩm "${product.name}"?`
     );
-    if (!confirmDelete) return;
+    if (!confirmRestore) return;
 
     try {
-      // 2. Gọi API Soft Delete (PATCH)
-      // Đường dẫn dựa trên backend của bạn: /api/product/deleted/:id
-      await api.patch(`/api/product/deleted/${product._id}`);
+      // Gọi API Restore
+      await api.patch(`/api/product/restore/${product._id}`);
 
-      // 3. Cập nhật UI ngay lập tức (Optimistic update)
-      // Lọc bỏ sản phẩm có _id vừa xóa khỏi danh sách hiện tại
+      // Cập nhật UI: Loại bỏ sản phẩm khỏi danh sách thùng rác
       setProductList((prevList) =>
         prevList.filter((item) => item._id !== product._id)
       );
 
-      // (Tùy chọn) Hiển thị thông báo nhỏ hoặc log
-      console.log("Đã xóa thành công:", product.name);
+      // console.log("Khôi phục thành công:", product.name);
     } catch (err: any) {
-      console.error("Lỗi khi xóa:", err);
-      alert("Xóa thất bại: " + (err.message || "Lỗi server"));
+      console.error("Lỗi khi khôi phục:", err);
+      alert("Khôi phục thất bại: " + (err.message || "Lỗi server"));
+    }
+  };
 
-      // Nếu lỗi 401/403 thì có thể redirect login (tùy logic của bạn)
+  // --- 3. HÀM XÓA VĨNH VIỄN (HARD DELETE) ---
+  const handleHardDelete = async (product: Product) => {
+    const confirmDelete = window.confirm(
+      `CẢNH BÁO: Bạn có chắc chắn muốn xóa VĨNH VIỄN sản phẩm "${product.name}"?\nHành động này KHÔNG THỂ hoàn tác!`
+    );
+    if (!confirmDelete) return;
+
+    try {
+      // Gọi API Hard Delete (Dùng method DELETE)
+      // Lưu ý: api.del phải được định nghĩa trong file api wrapper của bạn
+      await api.del(`/api/product/deleted/${product._id}`);
+
+      // Cập nhật UI
+      setProductList((prevList) =>
+        prevList.filter((item) => item._id !== product._id)
+      );
+
+      // console.log("Đã xóa vĩnh viễn:", product.name);
+    } catch (err: any) {
+      console.error("Lỗi khi xóa vĩnh viễn:", err);
+      alert("Xóa thất bại: " + (err.message || "Lỗi server"));
     }
   };
 
@@ -179,7 +200,6 @@ export default function ProductList({ onEdit, onDelete }: ProductTableProps) {
                   className="w-5 h-5 accent-blue-600 rounded cursor-pointer"
                 />
               </th>
-              {/* 1. THÊM w-[280px] để làm cột này ngắn lại */}
               <th className="p-4 w-[280px]">Thông tin Game</th>
               <th className="p-4">Phân loại & NSX</th>
               <th className="p-4">Giá & Kho</th>
@@ -204,11 +224,9 @@ export default function ProductList({ onEdit, onDelete }: ProductTableProps) {
                   />
                 </td>
 
-                {/* 2. CHỈNH SỬA CỘT THÔNG TIN GAME */}
                 <td className="p-4 max-w-[280px]">
                   <div className="flex items-center gap-3">
                     <div className="relative w-12 h-12 flex-shrink-0">
-                      {/* Giảm kích thước ảnh xuống 1 xíu (w-12 h-12) cho gọn */}
                       <Image
                         src={product.avatar || "/placeholder.png"}
                         alt={product.name}
@@ -225,7 +243,6 @@ export default function ProductList({ onEdit, onDelete }: ProductTableProps) {
                         {product.name}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
-                        {/* Đã XÓA phần hiển thị ID (product.category) ở đây */}
                         <span className="text-gray-500 text-xs px-2 py-0.5 border border-gray-200 rounded bg-gray-50">
                           v{product.version}
                         </span>
@@ -254,7 +271,6 @@ export default function ProductList({ onEdit, onDelete }: ProductTableProps) {
                   </div>
                 </td>
 
-                {/* 3. CHỈNH SỬA CỘT GIÁ & KHO: XÓA 'NGƯỜI CHƠI' */}
                 <td className="p-4">
                   <div className="font-bold text-gray-900 text-base">
                     {formatCurrency(product.price)}
@@ -266,7 +282,6 @@ export default function ProductList({ onEdit, onDelete }: ProductTableProps) {
                   >
                     Kho: {product.stock}
                   </div>
-                  {/* Đã xóa dòng hiển thị số người chơi ở đây */}
                 </td>
 
                 <td className="p-4">
@@ -316,20 +331,23 @@ export default function ProductList({ onEdit, onDelete }: ProductTableProps) {
                   </div>
                 </td>
 
+                {/* 4. CẬP NHẬT CỘT HÀNH ĐỘNG */}
                 <td className="p-4 text-center">
                   <div className="inline-flex border border-gray-300 rounded-lg bg-white shadow-sm overflow-hidden">
-                    <Link
-                      href={`/admin/products/edit/${product._id}`}
-                      className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition border-r border-gray-200"
-                      title="Chỉnh sửa"
-                    >
-                      <Edit3 size={16} />
-                    </Link>
-
+                    {/* Nút KHÔI PHỤC */}
                     <button
-                      onClick={() => handleDelete(product)}
+                      onClick={() => handleRestore(product)}
+                      className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 transition border-r border-gray-200"
+                      title="Khôi phục"
+                    >
+                      <RotateCcw size={16} />
+                    </button>
+
+                    {/* Nút XÓA VĨNH VIỄN */}
+                    <button
+                      onClick={() => handleHardDelete(product)}
                       className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 transition"
-                      title="Xóa"
+                      title="Xóa vĩnh viễn"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -341,7 +359,7 @@ export default function ProductList({ onEdit, onDelete }: ProductTableProps) {
             {productList.length === 0 && !loading && (
               <tr>
                 <td colSpan={7} className="text-center py-12 text-gray-500">
-                  Không tìm thấy sản phẩm nào.
+                  Thùng rác trống.
                 </td>
               </tr>
             )}

@@ -4,10 +4,14 @@ import { useRef, useEffect, useState } from "react";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 
 interface AppliedBarProps {
-  linktocreate: string
+  linktocreate: string;
+  trigger?: number; // Mặc định là optional
 }
 
-export default function AppliedBar({linktocreate}: AppliedBarProps) {
+export default function AppliedBar({
+  linktocreate,
+  trigger = 0, // Đặt giá trị mặc định là false
+}: AppliedBarProps) {
   const statusRef = useRef<HTMLDivElement | null>(null);
   const [boxHeight, setBoxHeight] = useState<number | null>(null);
 
@@ -63,22 +67,41 @@ export default function AppliedBar({linktocreate}: AppliedBarProps) {
           />
         </div>
 
-        {/* ➕ Nút Tạo mới */}
-        <Link
-          href={linktocreate}
-          className="bg-[#ff6f61] text-white font-bold text-[14px] border-0 px-7 rounded-[14px] cursor-pointer flex items-center justify-center"
-          style={{ height: boxHeight ? `${boxHeight}px` : "auto" }}
-        >
-          + Tạo mới
-        </Link>
+        {/* Logic: Nếu trigger là false (hoặc undefined) thì mới hiển thị 2 nút này */}
+        {trigger == 0 && (
+          <>
+            {/* ➕ Nút Tạo mới */}
+            <Link
+              href={linktocreate}
+              className="bg-[#ff6f61] text-white font-bold text-[14px] border-0 px-7 rounded-[14px] cursor-pointer flex items-center justify-center"
+              style={{ height: boxHeight ? `${boxHeight}px` : "auto" }}
+            >
+              + Tạo mới
+            </Link>
 
-        {/* 🗑️ Nút Thùng rác */}
-        <button
-          className="bg-[#EF382633] text-[#EF3826] font-bold text-[14px] border-0 px-7 rounded-[14px] cursor-pointer flex items-center justify-center"
-          style={{ height: boxHeight ? `${boxHeight}px` : "auto" }}
-        >
-          Thùng rác
-        </button>
+            {/* 🗑️ Nút Thùng rác */}
+            <Link
+              href={"/admin/products/trash"}
+              className="bg-[#EF382633] text-[#EF3826] font-bold text-[14px] border-0 px-7 rounded-[14px] cursor-pointer flex items-center justify-center"
+              style={{ height: boxHeight ? `${boxHeight}px` : "auto" }}
+            >
+              Thùng rác
+            </Link>
+          </>
+        )}
+
+        {trigger == 1 && (
+          <>
+            {/* ➕ Nút Tạo mới */}
+            <Link
+              href={linktocreate}
+              className="bg-[#ff6f61] text-white font-bold text-[14px] border-0 px-7 rounded-[14px] cursor-pointer flex items-center justify-center"
+              style={{ height: boxHeight ? `${boxHeight}px` : "auto" }}
+            >
+              + Tạo mới
+            </Link>
+          </>
+        )}
       </div>
     </div>
   );

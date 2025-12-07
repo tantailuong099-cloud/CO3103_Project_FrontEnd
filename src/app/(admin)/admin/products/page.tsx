@@ -5,7 +5,7 @@ import FilterSection, {
   FilterItem,
 } from "../../../components/admin/bar/FilterBar";
 import AppliedBar from "@/app/components/admin/bar/AppliedBar";
-import ProductList, { product } from "./ProductList";
+import ProductList from "./ProductList";
 
 export default function Products() {
   const [status, setStatus] = useState("");
@@ -20,9 +20,9 @@ export default function Products() {
       value: status,
       onChange: setStatus,
       options: [
-        { label: "Trạng thái", value: "" },
-        { label: "Hoạt động", value: "active" },
-        { label: "Tạm dừng", value: "paused" },
+        { label: "Phân Loại", value: "" },
+        { label: "Digital", value: "Digital" },
+        { label: "Physical", value: "Physical" },
       ],
     },
     {
@@ -61,21 +61,6 @@ export default function Products() {
     },
   ];
 
-  const SampleProduct: product[] = [
-    {
-      id: "1",
-      name: "Tour Hạ Long",
-      image: "/assets/images/tour-1.jpg",
-      price: { NL: 1900000, TE: 1600000, EB: 1000000 },
-      remain: { NL: 30, TE: 20, EB: 10 },
-      position: 1,
-      status: "active",
-      createdBy: "Lê Văn A",
-      createdAt: "16:30 - 20/10/2024",
-      updatedBy: "Lê Văn A",
-      updatedAt: "16:30 - 20/10/2024",
-    },
-  ];
 
   const handleReset = () => {
     setStatus("");
@@ -92,7 +77,6 @@ export default function Products() {
       <AppliedBar linktocreate="/admin/products/create" />
       {/* Nội dung trang */}
       <ProductList
-        products={SampleProduct}
         onEdit={(tour) => alert(`Edit: ${tour.name}`)}
         onDelete={(tour) => alert(`Delete: ${tour.name}`)}
       />
