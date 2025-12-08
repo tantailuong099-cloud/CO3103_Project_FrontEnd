@@ -1,258 +1,122 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import Image from "next/image";
+import React from "react";
+import { FaFilter, FaRotateLeft } from "react-icons/fa6";
+import { useQueryFilters } from "@/app/hook/useQueryFilters";
 
-/* ---------------------------------- TYPES ---------------------------------- */
+export type FilterType = "select" | "date-range";
 
-type FilterCategory = {
-  title: string;
-  options?: string[];
-  type?: "select" | "input";
-};
-
-type FiltersState = Record<string, string[] | string>;
-
-/* -------------------------------- COMPONENT -------------------------------- */
-
-export default function FilterDropdown() {
-  const [open, setOpen] = useState(false);
-  const [filters, setFilters] = useState<FiltersState>({});
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // --- Categories ---
-  const filterCategories: FilterCategory[] = [
-    {
-      title: "Platform",
-      options: [
-        "All type",
-        "PlayStation 5",
-        "PlayStation 4",
-        "Nintendo Switch",
-        "Xbox Series X",
-        "Xbox Series S",
-        "Xbox One",
-      ],
-      type: "select",
-    },
-    {
-      title: "Genre",
-      options: [
-        "All type",
-        "Action",
-        "Adventure",
-        "RPG",
-        "Strategy",
-        "Shooter",
-        "Puzzle",
-        "Simulation",
-      ],
-      type: "select",
-    },
-    {
-      title: "Country",
-      options: [
-        "All type",
-        "Japan",
-        "United States",
-        "China",
-        "South Korea",
-        "France",
-        "United Kingdom",
-      ],
-      type: "select",
-    },
-    {
-      title: "Manufacturer",
-      options: [
-        "All type",
-        "Nintendo",
-        "Sony",
-        "Microsoft",
-        "Ubisoft",
-        "Square Enix",
-        "Krafton",
-        "Others",
-      ],
-      type: "select",
-    },
-    { title: "Player", type: "input" },
-    { title: "Age", type: "input" },
-  ];
-
-  /* ----------------------------- Outside Click ----------------------------- */
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  /* ------------------------------- Handlers -------------------------------- */
-  const toggleOption = (category: string, option: string) => {
-    setFilters((prev) => {
-      const current = (prev[category] as string[]) || [];
-      const newSelected = current.includes(option)
-        ? current.filter((o) => o !== option)
-        : [...current, option];
-      return { ...prev, [category]: newSelected };
-    });
-  };
-
-  const handleInputChange = (category: string, value: string) => {
-    setFilters((prev) => ({ ...prev, [category]: value }));
-  };
-
-  const handleReset = () => setFilters({});
-  const handleApply = () => {
-    console.log("Applied filters:", filters);
-    setOpen(false);
-  };
-
-  /* ------------------------------- RENDERING ------------------------------- */
-  return (
-    <div ref={dropdownRef} className="relative inline-block text-left">
-      {/* Toggle Button */}
-      <button
-        onClick={() => setOpen(!open)}
-        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[15px] font-medium
-          transition-all duration-200
-          ${open ? "bg-black text-white" : "bg-[#fa4d38] text-white hover:bg-[#ff5c47]"}`}
-      >
-        <Image src="/icon/filter.png" alt="Filter" width={18} height={18} />
-        <span>Filter</span>
-        <Image
-          src="/icon/arrow.svg"
-          alt="arrow"
-          width={10}
-          height={6}
-          className={`ml-1 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-
-      {/* Dropdown Panel */}
-      {open && (
-        <div
-          className="
-            absolute left-0 top-full mt-2
-            w-[700px] max-w-[90vw]
-            bg-[#121212] border border-gray-700 rounded-xl shadow-xl p-5
-          "
-        >
-          <div className="flex flex-col gap-5 max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
-            {filterCategories.map((category) =>
-              category.type === "input" ? (
-                <InputRow
-                  key={category.title}
-                  category={category}
-                  value={(filters[category.title] as string) || ""}
-                  onChange={handleInputChange}
-                />
-              ) : (
-                <FilterSection
-                  key={category.title}
-                  category={category}
-                  filters={filters}
-                  toggleOption={toggleOption}
-                />
-              )
-            )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 mt-6 border-t border-gray-700 pt-4">
-            <button
-              onClick={handleReset}
-              className="bg-[#1e1e1e] px-4 py-2 rounded-md text-sm text-[#bababa] hover:bg-gray-700 transition"
-            >
-              Reset
-            </button>
-            <button
-              onClick={handleApply}
-              className="bg-[#fa4d38] px-4 py-2 rounded-md text-sm text-white hover:bg-[#ff624e] transition"
-            >
-              Apply Filter
-            </button>
-          
-          </div>
-        </div>
-      )}
-    </div>
-  );
+export interface BaseFilter {
+  type: FilterType;
 }
 
-/* ---------------------------- Helper Components ---------------------------- */
+export interface SelectFilter extends BaseFilter {
+  type: "select";
+  queryKey: string;
+  options: Array<{ label: string; value: string }>;
+  defaultValue?: string;
+}
 
-type FilterSectionProps = {
-  category: FilterCategory;
-  filters: FiltersState;
-  toggleOption: (category: string, option: string) => void;
-};
+export interface DateRangeFilter extends BaseFilter {
+  type: "date-range";
+  queryKeyFrom: string;
+  queryKeyTo: string;
+}
 
-function FilterSection({ category, filters, toggleOption }: FilterSectionProps) {
+export type FilterItem = SelectFilter | DateRangeFilter;
+
+interface ClientFilterSectionProps {
+  filters: FilterItem[];
+}
+
+const ClientFilterSection: React.FC<ClientFilterSectionProps> = ({
+  filters,
+}) => {
+  const { getFilter, setFilters } = useQueryFilters();
+
+  const handleReset = () => {
+    const updates: Record<string, null> = {};
+    filters.forEach((f) => {
+      if (f.type === "select") updates[f.queryKey] = null;
+      if (f.type === "date-range") {
+        updates[f.queryKeyFrom] = null;
+        updates[f.queryKeyTo] = null;
+      }
+    });
+    setFilters(updates);
+  };
+
   return (
-    <div className="flex flex-wrap items-start w-full">
-      <p className="font-semibold text-sm text-white w-[130px] shrink-0">{category.title}:</p>
-      <div className="flex flex-wrap gap-2">
-        {category.options?.map((option) => {
-          const isSelected = (filters[category.title] as string[])?.includes(option);
-          return (
-            <FilterButton
-              key={option}
-              label={option}
-              selected={isSelected}
-              onClick={() => toggleOption(category.title, option)}
-            />
-          );
-        })}
+    <div className="mb-6">
+      <div className="inline-flex flex-wrap bg-black border border-gray-800 rounded-xl overflow-hidden items-stretch text-white">
+
+        {/* TITLE */}
+        <div className="flex items-center gap-3 px-5 py-3 font-bold text-sm border-r border-gray-800">
+          <FaFilter className="text-white" /> Bộ lọc
+        </div>
+
+        {/* FILTER ITEMS */}
+        {filters.map((filter, index) => (
+          <div
+            key={index}
+            className="flex items-center gap-3 px-5 py-3 border-r border-gray-800"
+          >
+            {/* SELECT */}
+            {filter.type === "select" && (
+              <select
+                className="bg-black text-white outline-none text-sm font-semibold cursor-pointer"
+                value={getFilter(filter.queryKey) || ""}
+                onChange={(e) =>
+                  setFilters({ [filter.queryKey]: e.target.value })
+                }
+              >
+                {filter.options.map((opt, i) => (
+                  <option
+                    key={i}
+                    value={opt.value}
+                    className="bg-black text-white"
+                  >
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* DATE RANGE */}
+            {filter.type === "date-range" && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={getFilter(filter.queryKeyFrom)}
+                  onChange={(e) =>
+                    setFilters({ [filter.queryKeyFrom]: e.target.value })
+                  }
+                  className="bg-black text-white outline-none text-sm cursor-pointer"
+                />
+                <span className="text-white">-</span>
+                <input
+                  type="date"
+                  value={getFilter(filter.queryKeyTo)}
+                  onChange={(e) =>
+                    setFilters({ [filter.queryKeyTo]: e.target.value })
+                  }
+                  className="bg-black text-white outline-none text-sm cursor-pointer"
+                />
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* RESET */}
+        <div
+          onClick={handleReset}
+          className="flex items-center gap-2 px-5 py-3 font-semibold text-white cursor-pointer hover:bg-white/10 transition"
+        >
+          <FaRotateLeft className="text-white" /> Reset
+        </div>
       </div>
     </div>
   );
-}
-
-type FilterButtonProps = {
-  label: string;
-  selected: boolean;
-  onClick: () => void;
 };
 
-function FilterButton({ label, selected, onClick }: FilterButtonProps) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-3 py-1.5 rounded-md text-sm border transition-all duration-150
-        ${selected
-          ? "bg-[#fa4d38] border-[#fa4d38] text-white"
-          : "border-gray-600 text-gray-300 hover:border-[#fa4d38] hover:text-white"
-        }`}
-    >
-      {label}
-    </button>
-  );
-}
-
-type InputRowProps = {
-  category: FilterCategory;
-  value: string;
-  onChange: (category: string, value: string) => void;
-};
-
-function InputRow({ category, value, onChange }: InputRowProps) {
-  return (
-    <div className="flex items-center w-full">
-      <p className="font-semibold text-sm text-white w-[130px] shrink-0">{category.title}:</p>
-      <input
-        type="number"
-        min="1"
-        placeholder={`Enter ${category.title.toLowerCase()}`}
-        value={value}
-        onChange={(e) => onChange(category.title, e.target.value)}
-        className="bg-[#1e1e1e] text-white placeholder:text-gray-500 rounded-md px-3 py-2
-                   w-[140px] outline-none focus:ring-2 focus:ring-[#fa4d38] transition"
-      />
-    </div>
-  );
-}
+export default ClientFilterSection;

@@ -1,23 +1,23 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import CardLayout from "@/app/components/pages/card/GameCardSample";
 import { api } from "@/app/services/api";
 
 import PaginationV3 from "@/app/components/pages/bar/pagination";
-import FilterDropdown from "@/app/components/pages/bar/FilterBar";
 import SortedBy, { SortValue } from "@/app/components/pages/bar/SortBar";
-import { platform } from "os";
+import ClientFilterSection from "@/app/components/pages/bar/FilterBar";
+import { useQueryFilters } from "@/app/hook/useQueryFilters";
 
 export default function SearchPage() {
   const params = useSearchParams();
+  const { getFilter } = useQueryFilters();
 
   const categoryId = params.get("categoryId");
   const categoryName = params.get("categoryName");
   const type = params.get("type");
   const platform = params.get("platform");
-
 
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,32 +26,47 @@ export default function SearchPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  // ✅ sort state
+  // sort
   const [sortBy, setSortBy] = useState<SortValue>("relevant");
 
+  // ✅ CHỈ CÒN 2 FILTER: TYPE + CATEGORY
+  const clientFilters = [
+    {
+      type: "select",
+      queryKey: "typeFilter",
+      options: [
+        { label: "Phân Loại", value: "" },
+        { label: "Digital", value: "digital" },
+        { label: "Physical", value: "physical" },
+      ],
+    },
+    {
+      type: "select",
+      queryKey: "categoryFilter",
+      options: [
+        { label: "Danh Mục", value: "" },
+        { label: "Action", value: "action" },
+        { label: "RPG", value: "rpg" },
+        { label: "Adventure", value: "adventure" },
+      ],
+    },
+  ];
+
+  // ✅ FETCH DATA
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         let data: any[] = [];
 
-        if (type) {
-          const res = await api.get(`/api/product/type/${type}`);
-          data = res as any[];
-        }
-
-        if (categoryId) {
-          const res = await api.get(`/api/categories/product/${categoryId}`);
-          data = res as any[];
-        }
-        if (platform) {
-          const res = await api.get(`/api/product/platform/${platform}`);
-          data = res as any[];
-        }
+        if (type) data = (await api.get(`/api/product/type/${type}`)) as any[];
+        if (categoryId)
+          data = (await api.get(`/api/categories/product/${categoryId}`)) as any[];
+        if (platform)
+          data = (await api.get(`/api/product/platform/${platform}`)) as any[];
 
         if (!categoryId && !type && !platform) {
-          const res = await api.get(`/api/product`);
-          data = res as any[];
+          data = (await api.get(`/api/product`)) as any[];
         }
 
         setProducts(data);
@@ -65,40 +80,58 @@ export default function SearchPage() {
     };
 
     fetchData();
-  }, [categoryId, type]);
+  }, [categoryId, type, platform]);
 
-  // ✅ UI SORT LOGIC
-  const getSortedProducts = () => {
-    if (sortBy === "relevant") return products; // giữ nguyên thứ tự server
+  // ✅ APPLY CLIENT FILTERS (CHỈ TYPE + CATEGORY)
+  const filteredProducts = useMemo(() => {
+    let result = [...products];
 
-    const sorted = [...products];
+    const typeFilter = getFilter("typeFilter");
+    const categoryFilter = getFilter("categoryFilter");
+
+    if (typeFilter) {
+      result = result.filter((p) => p.type === typeFilter);
+    }
+
+    if (categoryFilter) {
+      result = result.filter(
+        (p) => p.categorySlug === categoryFilter
+      );
+    }
+
+    return result;
+  }, [products, getFilter]);
+
+  // ✅ SORT
+  const sortedProducts = useMemo(() => {
+    if (sortBy === "relevant") return filteredProducts;
+
+    const sorted = [...filteredProducts];
 
     sorted.sort((a, b) => {
-      const dateA = a.releaseDate ? new Date(a.releaseDate).getTime() : 0;
-      const dateB = b.releaseDate ? new Date(b.releaseDate).getTime() : 0;
-
-      const priceA = Number(a.price ?? 0);
-      const priceB = Number(b.price ?? 0);
+      const dateA = new Date(a.releaseDate || 0).getTime();
+      const dateB = new Date(b.releaseDate || 0).getTime();
+      const priceA = Number(a.price || 0);
+      const priceB = Number(b.price || 0);
 
       switch (sortBy) {
         case "newest":
-          return dateB - dateA; // mới nhất trước
+          return dateB - dateA;
         case "oldest":
-          return dateA - dateB; // cũ trước
+          return dateA - dateB;
         case "priceLow":
-          return priceA - priceB; // giá tăng dần
+          return priceA - priceB;
         case "priceHigh":
-          return priceB - priceA; // giá giảm dần
+          return priceB - priceA;
         default:
           return 0;
       }
     });
 
     return sorted;
-  };
+  }, [filteredProducts, sortBy]);
 
-  const sortedProducts = getSortedProducts();
-
+  // ✅ PAGINATION
   const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentProducts = sortedProducts.slice(
@@ -108,8 +141,7 @@ export default function SearchPage() {
 
   return (
     <main className="p-10 text-white">
-      {/* HEADER TITLE */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex justify-between mb-4">
         <h1 className="text-2xl">
           {type
             ? `Type: ${type}`
@@ -119,13 +151,13 @@ export default function SearchPage() {
         </h1>
       </div>
 
-      {/* FILTER + SORT BAR */}
-      <div className="flex items-center justify-between mb-8 relative z-40">
-        <FilterDropdown />
+      {/* ✅ CLIENT FILTER + SORT */}
+      <div className="flex items-center justify-between mb-8">
+        <ClientFilterSection filters={clientFilters as any} />
         <SortedBy value={sortBy} onChange={setSortBy} />
       </div>
 
-      {/* CONTENT */}
+      {/* ✅ CONTENT */}
       {loading ? (
         <p>Loading...</p>
       ) : currentProducts.length === 0 ? (
