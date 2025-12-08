@@ -53,9 +53,6 @@ export default function BuyOption({ product }: { product: any }) {
       {
         productId: _id,
         quantity: qty,
-      },
-      {
-        withCredentials: true, 
       }
     );
     console.log("🛒 Cart sau khi thêm:", res);

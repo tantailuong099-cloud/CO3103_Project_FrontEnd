@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { MockOrderItem } from "@/app/components/mockup/orderItem";
+import { OrderItemView } from "./order-view.type";
 
 const money = (n: number) =>
   `$${Math.max(0, n).toFixed(2).replace(/\.00$/, "")}`;
@@ -9,7 +9,8 @@ const money = (n: number) =>
 export type OrderHistoryCardProps = {
   orderId: string;
   date: string;                 // e.g. "14 May, 2025"
-  items: MockOrderItem[];       // list of items in this order
+  items: OrderItemView[];  
+  status: string;     // list of items in this order
   onSelect?: (orderId: string) => void; // ← add this
 };
 
@@ -17,8 +18,27 @@ export default function OrderHistoryCard({
   orderId,
   date,
   items,
+  status,
   onSelect,           // ← destructure it
 }: OrderHistoryCardProps) {
+  if (!items || items.length === 0) {
+    return (
+      <div className="bg-[#1b1b1b] border border-[#2e2e2e] rounded-2xl p-4 text-[#888] text-sm">
+        Loading order...
+      </div>
+    );
+  }
+const statusLabelMap: Record<string, string> = {
+  pending: "Pending Payment",
+  paid: "Paid",
+  shipped: "Shipped",
+  delivered: "Delivered",
+  cancelled: "Cancelled",
+};
+
+const statusLabel = statusLabelMap[status] ?? status;
+
+
   const first = items[0];
 
   const totals = items.reduce(
@@ -31,7 +51,6 @@ export default function OrderHistoryCard({
   );
 
   const finalUnit = Math.max(0, first.price - (first.discount ?? 0));
-
   return (
     <div className="bg-[#1b1b1b] border border-[#2e2e2e] rounded-2xl p-4 flex flex-col gap-2">
       {/* Top */}
@@ -41,9 +60,6 @@ export default function OrderHistoryCard({
         </span>
         <div className="flex items-center gap-3">
           <span className="text-sm text-[#bababa]">{date}</span>
-          <span className="text-xs bg-black border border-[#3a3a3a] text-white px-2 py-1 rounded">
-            {first.isDigital ? "Digital" : "Physical"}
-          </span>
         </div>
       </div>
 
@@ -87,11 +103,11 @@ export default function OrderHistoryCard({
       {/* Bottom row */}
       <div className="h-fit flex items-center justify-between gap-4 flex-wrap">
         <div className="flex gap-2">
-          <button className="text-xs px-3 py-2 rounded-lg bg-[#2e2e2e] text-white hover:bg-[#3a3a3a] transition">
+          <button className="text-xs px-3 py-2 rounded-lg border border-[#3a3a3a] text-[#dedddd] hover:border-[#fe8c31] transition">
             Rating Now
           </button>
-          <button className="text-xs px-3 py-2 rounded-lg border border-[#3a3a3a] text-[#dedddd] hover:border-[#fe8c31] transition">
-            Shipping
+          <button className="text-xs px-3 py-2 rounded-lg bg-[#2e2e2e] text-white hover:bg-[#3a3a3a] transition">
+            {statusLabel}
           </button>
         </div>
 

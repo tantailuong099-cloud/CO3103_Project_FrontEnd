@@ -105,19 +105,19 @@ export default function SideMenu({ onClose }: { onClose: () => void }) {
           onClick={() => setOpenPanel("CATEGORY")}
         />
 
-        <Divider />
-
         {/* ✅ SYSTEM GROUP */}
         
       </nav>
 
       {/* Footer */}
-      <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1 text-[17px]">
-        <MenuItem label="Settings" iconLeft={<Settings size={18} />} />
-        <MenuItem label="About Us" iconLeft={<Info size={18} />} />
-      </nav>
-      <div className="py-3 border-t border-white/10 text-center text-xs text-gray-400">
-        © 2025 ARC Studio
+      <div className="mt-auto border-t border-white/10">
+        <nav className="py-3 px-2 space-y-1 text-[17px]">
+          <MenuItem label="Settings" iconLeft={<Settings size={18} />} />
+          <MenuItem label="About Us" iconLeft={<Info size={18} />} />
+        </nav>
+        <div className="py-2 text-center text-xs text-gray-400">
+          © 2025 ARC Studio
+        </div>
       </div>
 
       {/* ✅ TYPE PANEL */}

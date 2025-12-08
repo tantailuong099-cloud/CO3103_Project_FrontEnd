@@ -11,6 +11,8 @@ export default function RegisterPage() {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState(""); // ✅ NEW
+  const [address, setAddress] = useState("");         // ✅ NEW
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,21 +24,28 @@ export default function RegisterPage() {
 
     if (!name.trim()) return setErr("Vui lòng nhập tên.");
     if (!email.trim()) return setErr("Vui lòng nhập email.");
+    if (!phoneNumber.trim()) return setErr("Vui lòng nhập số điện thoại.");
+    if (!address.trim()) return setErr("Vui lòng nhập địa chỉ.");
     if (password.length < 6) return setErr("Mật khẩu tối thiểu 6 ký tự.");
     if (password !== confirm) return setErr("Xác nhận mật khẩu không khớp.");
 
     try {
       setLoading(true);
 
-      // ✅ Đăng ký
-      await register(name.trim(), email.trim(), password);
+      // ✅ Đăng ký (đúng theo CreateUserDto)
+      await register({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+        phoneNumber: phoneNumber.trim(),
+        address: address.trim(),
+      });
 
       // ✅ Login để backend set COOKIE
       await login(email.trim(), password);
 
-      // ✅ Sau khi có cookie → vào My Account hoặc Cart
+      // ✅ Sau khi có cookie → vào trang chủ
       router.push("/");
-
     } catch (e: any) {
       const msg =
         typeof e?.message === "string" ? e.message : "Đăng ký thất bại.";
@@ -58,6 +67,7 @@ export default function RegisterPage() {
         </h1>
 
         <form onSubmit={onSubmit} className="space-y-5">
+          {/* ✅ NAME */}
           <div>
             <label className="block text-sm text-gray-300 mb-2">
               Họ và tên
@@ -71,6 +81,7 @@ export default function RegisterPage() {
             />
           </div>
 
+          {/* ✅ EMAIL */}
           <div>
             <label className="block text-sm text-gray-300 mb-2">
               Email
@@ -84,6 +95,35 @@ export default function RegisterPage() {
             />
           </div>
 
+          {/* ✅ PHONE NUMBER */}
+          <div>
+            <label className="block text-sm text-gray-300 mb-2">
+              Số điện thoại
+            </label>
+            <input
+              type="tel"
+              placeholder="0912345678"
+              className="w-full rounded-lg bg-[#1a1a1a] border border-[#3a3a3a] px-4 py-3 text-white outline-none focus:border-[#fe8c31]"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+            />
+          </div>
+
+          {/* ✅ ADDRESS */}
+          <div>
+            <label className="block text-sm text-gray-300 mb-2">
+              Địa chỉ
+            </label>
+            <input
+              type="text"
+              placeholder="123 ABC Street, Quận 1, TP.HCM"
+              className="w-full rounded-lg bg-[#1a1a1a] border border-[#3a3a3a] px-4 py-3 text-white outline-none focus:border-[#fe8c31]"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
+          </div>
+
+          {/* ✅ PASSWORD */}
           <div>
             <label className="block text-sm text-gray-300 mb-2">
               Mật khẩu
@@ -97,6 +137,7 @@ export default function RegisterPage() {
             />
           </div>
 
+          {/* ✅ CONFIRM PASSWORD */}
           <div>
             <label className="block text-sm text-gray-300 mb-2">
               Xác nhận mật khẩu

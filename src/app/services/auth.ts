@@ -6,15 +6,19 @@ export type User = {
   email: string;
 };
 
-// ✅ Register
-export async function register(
-  name: string,
-  email: string,
-  password: string
-): Promise<void> {
-  await api.post("/api/auth/register", { name, email, password }, {
-    withCredentials: true,
-  });
+// ✅ Register (NHẬN OBJECT ĐÚNG DTO)
+export async function register(data: {
+  name: string;
+  email: string;
+  password: string;
+  phoneNumber?: string;
+  address?: string;
+}): Promise<void> {
+  await api.post(
+    "/api/auth/register",
+    data,
+    { withCredentials: true }
+  );
 }
 
 // ✅ Login (cookie httpOnly)
@@ -42,6 +46,5 @@ export async function getMe(): Promise<User> {
     withCredentials: true,
   });
 
-  // ✅ Trả về đúng kiểu User (không phải unknown)
   return res;
 }

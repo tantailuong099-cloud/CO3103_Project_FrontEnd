@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { api } from "@/app/services/api";
+import { AddressFormValues } from "@/app/components/pages/checkout/AddressForm";
 
 const money = (n: number) =>
   `$${Math.max(0, n).toFixed(2).replace(/\.00$/, "")}`;
@@ -10,34 +11,56 @@ type PaymentMethod = "MOMO" | "ZALOPAY";
 
 export default function PaymentPanel({
   totals,
+  address,
 }: {
   totals: { original: number; discount: number; subtotal: number };
+  address: AddressFormValues | null;
 }) {
   const [selected, setSelected] = useState<PaymentMethod>("MOMO");
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleCheckout = async () => {
-  try {
-    const stored = localStorage.getItem("CHECKOUT_ITEMS");
-    if (!stored) {
-      alert("⚠️ No items selected for checkout!");
-      return;
+    try {
+      // ✅ SINGLE STRING VALIDATION
+      if (!address?.address || address.address.trim() === "") {
+        alert("⚠️ Please enter shipping address!");
+        return;
+      }
+
+      const stored = localStorage.getItem("CHECKOUT_ITEMS");
+      if (!stored) {
+        alert("⚠️ No items selected for checkout!");
+        return;
+      }
+
+      const selectedItems = JSON.parse(stored) as {
+        id: string;
+        quantity: number;
+      }[];
+
+      const productIds = selectedItems.map((i) => i.id);
+
+      // ✅ ✅ SINGLE STRING SHIPPING ADDRESS
+      const shippingAddress = address.address;
+
+      console.log("📦 Shipping address sẽ gửi lên:", shippingAddress);
+
+      const res = await api.post("/api/order/checkout/partial", {
+        productIds,
+        shippingAddress,          // ✅ STRING ONLY
+        paymentMethod: selected, // ✅ MOMO | ZALOPAY
+      });
+
+      console.log("✅ Checkout success:", res);
+
+      localStorage.removeItem("CHECKOUT_ITEMS");
+      localStorage.removeItem("CHECKOUT_ADDRESS"); // ✅ clear temp address
+      setShowSuccess(true);
+    } catch (err: any) {
+      console.error("❌ Checkout error:", err?.message || err);
+      alert(`Checkout failed: ${err?.message || "Unknown error"}`);
     }
-
-    const selectedItems = JSON.parse(stored) as { id: string; quantity: number }[];
-    const productIds = selectedItems.map((i) => i.id);
-
-    const res = await api.post("/api/order/checkout/partial", { productIds });
-    console.log("✅ Checkout success:", res);
-
-    localStorage.removeItem("CHECKOUT_ITEMS");
-    setShowSuccess(true);
-  } catch (err: any) {
-    console.error("❌ Checkout error:", err.message || err);
-    alert(`Checkout failed: ${err.message || "Unknown error"}`);
-  }
-};
-
+  };
 
   const baseBtn =
     "w-full py-3 px-4 rounded-xl border bg-[#1c1c1c] text-[#e5e5e5] transition flex items-center justify-between";
@@ -72,7 +95,12 @@ export default function PaymentPanel({
           <button
             type="button"
             onClick={() => setSelected("MOMO")}
-            className={[baseBtn, selected === "MOMO" ? "border-[#fe8c31] ring-1 ring-[#fe8c31]/40" : "border-[#3a3a3a]"].join(" ")}
+            className={[
+              baseBtn,
+              selected === "MOMO"
+                ? "border-[#fe8c31] ring-1 ring-[#fe8c31]/40"
+                : "border-[#3a3a3a]",
+            ].join(" ")}
           >
             <span className={leftWrap}>
               <Image src="/icon/momo.svg" alt="MOMO" width={30} height={30} />
@@ -83,7 +111,12 @@ export default function PaymentPanel({
           <button
             type="button"
             onClick={() => setSelected("ZALOPAY")}
-            className={[baseBtn, selected === "ZALOPAY" ? "border-[#fe8c31] ring-1 ring-[#fe8c31]/40" : "border-[#3a3a3a]"].join(" ")}
+            className={[
+              baseBtn,
+              selected === "ZALOPAY"
+                ? "border-[#fe8c31] ring-1 ring-[#fe8c31]/40"
+                : "border-[#3a3a3a]",
+            ].join(" ")}
           >
             <span className={leftWrap}>
               <Image src="/icon/zalo.png" alt="ZaloPay" width={30} height={30} />
@@ -100,22 +133,35 @@ export default function PaymentPanel({
         </button>
       </div>
 
-      {/* SUCCESS MODAL */}
+      {/* ✅ SUCCESS MODAL */}
       {showSuccess && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[#181818] border border-[#2a2a2a] rounded-2xl p-8 w-full max-w-md text-center space-y-6 animate-fadeIn">
             <div className="w-24 h-24 mx-auto">
-              <Image src="/icon/checked.png" width={96} height={96} alt="success" />
+              <Image
+                src="/icon/checked.png"
+                width={96}
+                height={96}
+                alt="success"
+              />
             </div>
-            <h2 className="text-white text-xl font-bold">THANK YOU FOR ORDERING!</h2>
+            <h2 className="text-white text-xl font-bold">
+              THANK YOU FOR ORDERING!
+            </h2>
             <p className="text-[#bdbdbd] text-sm leading-relaxed">
               A confirmation email will be sent shortly.
             </p>
             <div className="flex gap-3 pt-4">
-              <a href="/orders" className="flex-1 text-center py-3 rounded-xl bg-[#1c1c1c] border border-[#3a3a3a] text-white hover:border-[#fe8c31] transition">
+              <a
+                href="/orders"
+                className="flex-1 text-center py-3 rounded-xl bg-[#1c1c1c] border border-[#3a3a3a] text-white hover:border-[#fe8c31] transition"
+              >
                 View Order
               </a>
-              <a href="/" className="flex-1 text-center py-3 rounded-xl bg-[#FA4D38] hover:bg-[#ff9d4f] text-white transition">
+              <a
+                href="/"
+                className="flex-1 text-center py-3 rounded-xl bg-[#FA4D38] hover:bg-[#ff9d4f] text-white transition"
+              >
                 Continue Shopping
               </a>
             </div>

@@ -24,7 +24,7 @@ export default function CartSummary({ digitalSubtotal, physicalSubtotal, selecte
   };
 
   const itemsSubtotal = digitalSubtotal + physicalSubtotal;
-  const arcDiscount = itemsSubtotal >= 120 ? 10 : 0;
+  const arcDiscount = itemsSubtotal >= 200 ? 10 : 0;
   const total = Math.max(0, itemsSubtotal - arcDiscount);
 
   return (
