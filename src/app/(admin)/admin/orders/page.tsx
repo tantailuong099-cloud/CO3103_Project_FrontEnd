@@ -5,12 +5,12 @@ import FilterSection, {
   FilterItem,
 } from "@/app/components/admin/bar/FilterBar";
 import { useState } from "react";
+import OrderTable from "./OrderTable";
 
 export default function orders() {
   const [status, setStatus] = useState("");
   const [dateRange, setDateRange] = useState({ startDate: "", endDate: "" });
   const [paymentMethod, setPaymentMethod] = useState("");
-  const [price, setPrice] = useState("");
 
   const filters: FilterItem[] = [
     {
@@ -57,6 +57,7 @@ export default function orders() {
         <FilterSection filters={filters} onReset={handleReset} />
         <AppliedBar linktocreate="/admin/products/create" />
         {/* Nội dung trang */}
+        <OrderTable />
       </div>
     </>
   );

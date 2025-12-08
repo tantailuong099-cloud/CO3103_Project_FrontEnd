@@ -257,7 +257,7 @@ export default function CreateForm() {
             />
           </div>
 
-          <div>
+          {/* <div>
             <label className="font-semibold text-gray-600 block mb-2">
               Options
             </label>
@@ -268,7 +268,7 @@ export default function CreateForm() {
               onChange={handleChange}
               className="w-full border border-gray-300 bg-gray-50 text-black rounded-md p-3"
             />
-          </div>
+          </div> */}
         </div>
 
         {/* --- Cột phải --- */}
@@ -303,15 +303,18 @@ export default function CreateForm() {
 
           <div>
             <label className="font-semibold text-gray-600 block mb-2">
-              Ngôn ngữ
+              Platform
             </label>
-            <input
-              type="text"
+            <select
               name="language"
               value={form.language}
               onChange={handleChange}
               className="w-full border border-gray-300 bg-gray-50 text-black rounded-md p-3"
-            />
+            >
+              <option value="PS5">PS5</option>
+              <option value="Nintendo">Nintendo</option>
+              <option value="Xbox">Xbox</option>
+            </select>
           </div>
 
           <div>

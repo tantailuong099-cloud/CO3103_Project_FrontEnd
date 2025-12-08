@@ -378,7 +378,7 @@ export default function EditForm() {
             />
           </div>
 
-          <div>
+          {/* <div>
             <label className="font-semibold text-gray-600 block mb-2">
               Options (Cách nhau bởi dấu phẩy)
             </label>
@@ -390,7 +390,7 @@ export default function EditForm() {
               placeholder="Ví dụ: Standard Edition, Deluxe Edition"
               className="w-full border border-gray-300 bg-gray-50 text-black rounded-md p-3"
             />
-          </div>
+          </div> */}
         </div>
 
         {/* --- CỘT PHẢI --- */}
@@ -426,15 +426,18 @@ export default function EditForm() {
 
           <div>
             <label className="font-semibold text-gray-600 block mb-2">
-              Ngôn ngữ
+              Platform
             </label>
-            <input
-              type="text"
+            <select
               name="language"
               value={form.language}
               onChange={handleChange}
               className="w-full border border-gray-300 bg-gray-50 text-black rounded-md p-3"
-            />
+            >
+              <option value="PS5">PS5</option>
+              <option value="Nintendo">Nintendo</option>
+              <option value="Xbox">Xbox</option>
+            </select>
           </div>
 
           <div>
