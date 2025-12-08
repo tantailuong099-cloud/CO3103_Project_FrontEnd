@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Edit3, Trash2, RefreshCcw, AlertCircle, Tv } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/app/services/api";
 
 export enum GameType {
@@ -17,59 +17,50 @@ export interface Product {
   name: string;
   avatar: string;
   releaseDate: string;
-  category: string;
+  category: string; // ID category
   type: GameType;
   version: string;
   price: number;
   stock: number;
-  description: string;
   metacriticScore: number;
-  metacriticURL: string;
   ignScore: number;
-  ignURL: string;
-  playerNumber: number;
-  ageConstraints: number;
-  productImage: string[];
-  videoLink: string;
-  manufactor: string;
-  options: string[];
-  playmode: string;
-  language: string;
   createdBy: string;
-  createdAt: string;
   updatedBy: string;
-  updatedAt: string;
   deleted: boolean;
+  // ... các field khác
 }
 
+// Cập nhật Props để nhận state từ cha
 interface ProductTableProps {
-  onEdit?: (product: Product) => void;
-  onDelete?: (product: Product) => void;
+  selectedIds: string[];
+  setSelectedIds: (ids: string[]) => void;
+  refreshTrigger: number;
 }
 
-export default function ProductList({ onEdit, onDelete }: ProductTableProps) {
+export default function ProductList({
+  selectedIds,
+  setSelectedIds,
+  refreshTrigger,
+}: ProductTableProps) {
   const router = useRouter();
-  const [productList, setProductList] = useState<Product[]>([]);
+  const searchParams = useSearchParams(); // Hook lấy params từ URL
+
+  const [allProducts, setAllProducts] = useState<Product[]>([]); // Dữ liệu gốc
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]); // Dữ liệu sau khi lọc
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<string[]>([]);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("vi-VN", {
+  // --- Format Helpers ---
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
     }).format(amount);
-  };
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "";
-    return new Date(dateString).toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
+  const formatDate = (dateString: string) =>
+    dateString ? new Date(dateString).toLocaleDateString("vi-VN") : "";
 
+  // --- 1. Fetch All Products ---
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -80,87 +71,122 @@ export default function ProductList({ onEdit, onDelete }: ProductTableProps) {
       const productsData = Array.isArray(data)
         ? data
         : (data as any).data || [];
-      setProductList(productsData.filter((p: Product) => !p.deleted));
+
+      // Chỉ lấy sản phẩm chưa xóa
+      const activeProducts = productsData.filter((p: Product) => !p.deleted);
+      setAllProducts(activeProducts);
+      setDisplayedProducts(activeProducts); // Mặc định hiển thị hết
     } catch (err: any) {
-      console.error("Lỗi fetch products:", err);
-      const errorMessage = err.message || "";
-      if (
-        errorMessage.includes("401") ||
-        errorMessage.includes("Unauthorized") ||
-        errorMessage.includes("Invalid Credentials")
-      ) {
-        router.push("/login");
-        return;
-      }
-      setError(errorMessage || "Không thể tải danh sách sản phẩm");
+      console.error("Lỗi fetch:", err);
+      setError(err.message || "Lỗi tải dữ liệu");
     } finally {
       setLoading(false);
     }
   };
 
+  // Gọi fetch khi mount hoặc khi cha yêu cầu refresh (sau khi xóa)
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [refreshTrigger]);
 
-  const handleDelete = async (product: Product) => {
-    // 1. Xác nhận với người dùng
-    const confirmDelete = window.confirm(
-      `Bạn có chắc chắn muốn xóa sản phẩm "${product.name}" không?`
-    );
-    if (!confirmDelete) return;
+  // --- 2. Filter Logic (Client-side) ---
+  // Mỗi khi URL params hoặc allProducts thay đổi, tính toán lại displayedProducts
+  useEffect(() => {
+    if (allProducts.length === 0) return;
 
-    try {
-      // 2. Gọi API Soft Delete (PATCH)
-      // Đường dẫn dựa trên backend của bạn: /api/product/deleted/:id
-      await api.patch(`/api/product/deleted/${product._id}`);
+    let result = [...allProducts];
 
-      // 3. Cập nhật UI ngay lập tức (Optimistic update)
-      // Lọc bỏ sản phẩm có _id vừa xóa khỏi danh sách hiện tại
-      setProductList((prevList) =>
-        prevList.filter((item) => item._id !== product._id)
+    // Lấy params
+    const type = searchParams.get("type");
+    const keyword = searchParams.get("keyword");
+    const category = searchParams.get("category"); // Đây có thể là ID category
+    const priceRange = searchParams.get("priceRange");
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+
+    // Lọc theo Type (Digital/Physical)
+    if (type) {
+      result = result.filter(
+        (p) => p.type.toLowerCase() === type.toLowerCase()
       );
+    }
 
-      // (Tùy chọn) Hiển thị thông báo nhỏ hoặc log
-      console.log("Đã xóa thành công:", product.name);
-    } catch (err: any) {
-      console.error("Lỗi khi xóa:", err);
-      alert("Xóa thất bại: " + (err.message || "Lỗi server"));
+    // Lọc theo Keyword (Tên)
+    if (keyword) {
+      const lowerKeyword = keyword.toLowerCase();
+      result = result.filter((p) =>
+        p.name.toLowerCase().includes(lowerKeyword)
+      );
+    }
 
-      // Nếu lỗi 401/403 thì có thể redirect login (tùy logic của bạn)
+    // Lọc theo Category
+    if (category) {
+      // Cần đảm bảo p.category khớp với value trong options (thường là ID)
+      // Nếu trong data p.category là object populate thì dùng p.category._id
+      result = result.filter((p) => p.category === category);
+    }
+
+    // Lọc theo Price Range
+    if (priceRange) {
+      if (priceRange === "under_1m") {
+        result = result.filter((p) => p.price < 1000000);
+      } else if (priceRange === "1m_2m") {
+        result = result.filter((p) => p.price >= 1000000 && p.price <= 2000000);
+      } else if (priceRange === "above_2m") {
+        result = result.filter((p) => p.price > 2000000);
+      }
+    }
+
+    // Lọc theo Date Range (Release Date hoặc CreatedAt)
+    if (startDate && endDate) {
+      const start = new Date(startDate).getTime();
+      const end = new Date(endDate).getTime();
+      result = result.filter((p) => {
+        const pDate = new Date(p.releaseDate).getTime();
+        return pDate >= start && pDate <= end;
+      });
+    }
+
+    setDisplayedProducts(result);
+  }, [searchParams, allProducts]);
+
+  // --- Handlers ---
+  const toggleSelectAll = () => {
+    if (selectedIds.length === displayedProducts.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(displayedProducts.map((t) => t._id));
     }
   };
 
-  const toggleSelectAll = () => {
-    if (selected.length === productList.length) setSelected([]);
-    else setSelected(productList.map((t) => t._id));
-  };
-
   const toggleSelect = (id: string) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter((x) => x !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
   };
 
+  const handleDeleteSingle = async (product: Product) => {
+    if (!confirm(`Xóa sản phẩm "${product.name}"?`)) return;
+    try {
+      await api.patch(`/api/product/deleted/${product._id}`);
+      // Optimistic update
+      setAllProducts((prev) => prev.filter((p) => p._id !== product._id));
+    } catch (e) {
+      alert("Xóa thất bại");
+    }
+  };
+
+  // --- Render ---
   if (loading)
     return (
-      <div className="flex justify-center items-center h-64 text-gray-500">
-        <RefreshCcw className="animate-spin w-8 h-8 mr-2" /> Đang tải dữ liệu...
+      <div className="p-10 text-center text-gray-500">
+        <RefreshCcw className="animate-spin inline mr-2" /> Đang tải...
       </div>
     );
-
   if (error)
-    return (
-      <div className="flex flex-col items-center justify-center h-40 bg-red-50 text-red-600 rounded-xl border border-red-200 mb-8">
-        <AlertCircle className="w-8 h-8 mb-2" />
-        <p>{error}</p>
-        <button
-          onClick={fetchProducts}
-          className="mt-2 text-sm underline font-medium hover:text-red-800"
-        >
-          Thử lại
-        </button>
-      </div>
-    );
+    return <div className="p-10 text-center text-red-500">{error}</div>;
 
   return (
     <div className="w-full overflow-x-auto mb-8 pb-4">
@@ -172,25 +198,24 @@ export default function ProductList({ onEdit, onDelete }: ProductTableProps) {
                 <input
                   type="checkbox"
                   checked={
-                    productList.length > 0 &&
-                    selected.length === productList.length
+                    displayedProducts.length > 0 &&
+                    selectedIds.length === displayedProducts.length
                   }
                   onChange={toggleSelectAll}
                   className="w-5 h-5 accent-blue-600 rounded cursor-pointer"
                 />
               </th>
-              {/* 1. THÊM w-[280px] để làm cột này ngắn lại */}
               <th className="p-4 w-[280px]">Thông tin Game</th>
               <th className="p-4">Phân loại & NSX</th>
               <th className="p-4">Giá & Kho</th>
               <th className="p-4">Đánh giá</th>
-              <th className="p-4">Quản lý</th>
+              <th className="p-4">Người tạo</th>
               <th className="p-4 text-center">Hành động</th>
             </tr>
           </thead>
 
           <tbody className="divide-y divide-gray-200">
-            {productList.map((product) => (
+            {displayedProducts.map((product) => (
               <tr
                 key={product._id}
                 className="hover:bg-gray-50 transition-colors"
@@ -198,22 +223,20 @@ export default function ProductList({ onEdit, onDelete }: ProductTableProps) {
                 <td className="p-4 text-center">
                   <input
                     type="checkbox"
-                    checked={selected.includes(product._id)}
+                    checked={selectedIds.includes(product._id)}
                     onChange={() => toggleSelect(product._id)}
                     className="w-5 h-5 accent-blue-600 rounded cursor-pointer"
                   />
                 </td>
 
-                {/* 2. CHỈNH SỬA CỘT THÔNG TIN GAME */}
                 <td className="p-4 max-w-[280px]">
                   <div className="flex items-center gap-3">
                     <div className="relative w-12 h-12 flex-shrink-0">
-                      {/* Giảm kích thước ảnh xuống 1 xíu (w-12 h-12) cho gọn */}
                       <Image
                         src={product.avatar || "/placeholder.png"}
                         alt={product.name}
                         fill
-                        className="object-cover rounded-lg border border-gray-200 shadow-sm"
+                        className="object-cover rounded-lg border border-gray-200"
                         unoptimized
                       />
                     </div>
@@ -224,39 +247,32 @@ export default function ProductList({ onEdit, onDelete }: ProductTableProps) {
                       >
                         {product.name}
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        {/* Đã XÓA phần hiển thị ID (product.category) ở đây */}
-                        <span className="text-gray-500 text-xs px-2 py-0.5 border border-gray-200 rounded bg-gray-50">
-                          v{product.version}
-                        </span>
-                      </div>
+                      <span className="text-gray-500 text-xs px-2 py-0.5 border border-gray-200 rounded bg-gray-50 mt-1 inline-block">
+                        v{product.version}
+                      </span>
                     </div>
                   </div>
                 </td>
 
                 <td className="p-4">
                   <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                      {product.type === GameType.PHYSICAL ? (
-                        <span className="flex items-center gap-1 text-amber-700 bg-amber-100 px-2 py-0.5 rounded text-[11px] font-medium w-fit">
-                          <Tv size={12} /> Physical
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-purple-700 bg-purple-100 px-2 py-0.5 rounded text-[11px] font-medium w-fit">
-                          <Tv size={12} /> Digital
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="text-gray-400 text-xs">
+                    {product.type === GameType.PHYSICAL ? (
+                      <span className="flex items-center gap-1 text-amber-700 bg-amber-100 px-2 py-0.5 rounded text-[11px] font-medium w-fit">
+                        <Tv size={12} /> Physical
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-purple-700 bg-purple-100 px-2 py-0.5 rounded text-[11px] font-medium w-fit">
+                        <Tv size={12} /> Digital
+                      </span>
+                    )}
+                    <span className="text-gray-400 text-xs">
                       {formatDate(product.releaseDate)}
-                    </div>
+                    </span>
                   </div>
                 </td>
 
-                {/* 3. CHỈNH SỬA CỘT GIÁ & KHO: XÓA 'NGƯỜI CHƠI' */}
                 <td className="p-4">
-                  <div className="font-bold text-gray-900 text-base">
+                  <div className="font-bold text-gray-900">
                     {formatCurrency(product.price)}
                   </div>
                   <div
@@ -266,7 +282,6 @@ export default function ProductList({ onEdit, onDelete }: ProductTableProps) {
                   >
                     Kho: {product.stock}
                   </div>
-                  {/* Đã xóa dòng hiển thị số người chơi ở đây */}
                 </td>
 
                 <td className="p-4">
@@ -279,15 +294,12 @@ export default function ProductList({ onEdit, onDelete }: ProductTableProps) {
                         className={`text-xs font-bold px-1.5 py-0.5 rounded text-white ${
                           product.metacriticScore >= 75
                             ? "bg-green-500"
-                            : product.metacriticScore >= 50
-                            ? "bg-yellow-500"
-                            : "bg-red-500"
+                            : "bg-yellow-500"
                         }`}
                       >
                         {product.metacriticScore}
                       </span>
                     </div>
-
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-bold text-gray-400 uppercase w-8">
                         IGN
@@ -299,21 +311,8 @@ export default function ProductList({ onEdit, onDelete }: ProductTableProps) {
                   </div>
                 </td>
 
-                <td className="p-4">
-                  <div className="text-xs text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <span className="text-gray-400 w-8">Tạo:</span>
-                      <span className="truncate max-w-[80px]">
-                        {product.createdBy}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 mt-1">
-                      <span className="text-gray-400 w-8">Sửa:</span>
-                      <span className="truncate max-w-[80px]">
-                        {product.updatedBy}
-                      </span>
-                    </div>
-                  </div>
+                <td className="p-4 text-xs text-gray-600">
+                  <div className="truncate w-24">{product.createdBy}</div>
                 </td>
 
                 <td className="p-4 text-center">
@@ -321,15 +320,12 @@ export default function ProductList({ onEdit, onDelete }: ProductTableProps) {
                     <Link
                       href={`/admin/products/edit/${product._id}`}
                       className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition border-r border-gray-200"
-                      title="Chỉnh sửa"
                     >
                       <Edit3 size={16} />
                     </Link>
-
                     <button
-                      onClick={() => handleDelete(product)}
+                      onClick={() => handleDeleteSingle(product)}
                       className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 transition"
-                      title="Xóa"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -338,10 +334,10 @@ export default function ProductList({ onEdit, onDelete }: ProductTableProps) {
               </tr>
             ))}
 
-            {productList.length === 0 && !loading && (
+            {displayedProducts.length === 0 && (
               <tr>
-                <td colSpan={7} className="text-center py-12 text-gray-500">
-                  Không tìm thấy sản phẩm nào.
+                <td colSpan={7} className="text-center py-8 text-gray-500">
+                  Không tìm thấy sản phẩm phù hợp.
                 </td>
               </tr>
             )}

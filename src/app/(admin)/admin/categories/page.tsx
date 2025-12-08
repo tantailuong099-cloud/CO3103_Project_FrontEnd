@@ -1,73 +1,114 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import FilterSection, {
   FilterItem,
 } from "@/app/components/admin/bar/FilterBar";
-import CategoryTable, { Category } from "./CategoryList";
 import AppliedBar from "@/app/components/admin/bar/AppliedBar";
-import { useState } from "react";
+import CategoryTable from "./CategoryList"; // Đảm bảo filename là CategoryList.tsx
+import { api } from "@/app/services/api";
 
-const mockData: Category[] = [
-  {
-    _id: "654321",
-    name: "Laptop Gaming",
-    description: "Các dòng laptop cấu hình cao phục vụ chơi game đồ họa nặng.",
-    createdBy: "Admin Root",
-    createdAt: "2023-11-20T10:00:00.000Z",
-    updatedBy: "Manager A",
-    updatedAt: "2023-11-21T15:30:00.000Z",
-  },
-  {
-    _id: "123456",
-    name: "Phụ kiện",
-    description: "Chuột, bàn phím, tai nghe chính hãng.",
-    createdBy: "Admin Root",
-    createdAt: "2023-10-15T09:00:00.000Z",
-    updatedBy: "Admin Root",
-    updatedAt: "2023-10-15T09:00:00.000Z",
-  },
-];
+// Interface cho Admin User dùng trong bộ lọc
+interface AdminUser {
+  _id: string;
+  name: string;
+}
 
-export default function Page() {
-  const [status, setStatus] = useState("");
-  const [creator, setCreator] = useState("");
-  const [dateRange, setDateRange] = useState({ startDate: "", endDate: "" });
-  const [category, setCategory] = useState("");
-  const [price, setPrice] = useState("");
+export default function CategoriesPage() {
+  const router = useRouter();
 
+  // 1. State quản lý Selection và Reload
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // State cho options bộ lọc
+  const [creatorOptions, setCreatorOptions] = useState([
+    { label: "Người tạo", value: "" },
+  ]);
+
+  // 2. Lấy danh sách Admin để đổ vào bộ lọc
+  useEffect(() => {
+    const fetchAdmins = async () => {
+      try {
+        const data = await api.get<AdminUser[]>("/api/users/admin"); // Check lại route API lấy admin của bạn
+        if (Array.isArray(data)) {
+          const options = data.map((user) => ({
+            label: user.name,
+            value: user.name, // Lưu ý: Lọc theo tên hoặc ID tùy DB của bạn
+          }));
+          setCreatorOptions([{ label: "Người tạo", value: "" }, ...options]);
+        }
+      } catch (error) {
+        console.error("Lỗi lấy danh sách admin:", error);
+      }
+    };
+    fetchAdmins();
+  }, []);
+
+  // 3. Cấu hình bộ lọc
   const filters: FilterItem[] = [
     {
       type: "select",
-      value: creator,
-      onChange: setCreator,
-      options: [
-        { label: "Người tạo", value: "" },
-        { label: "Lê Văn A", value: "a" },
-        { label: "Lê Văn B", value: "b" },
-      ],
+      queryKey: "creator",
+      options: creatorOptions,
     },
     {
       type: "date-range",
-      startDate: dateRange.startDate,
-      endDate: dateRange.endDate,
-      onChange: setDateRange,
+      queryKeyFrom: "startDate",
+      queryKeyTo: "endDate",
     },
   ];
 
-  const handleReset = () => {
-    setStatus("");
-    setCreator("");
-    setDateRange({ startDate: "", endDate: "" });
+  // 4. Xử lý hành động từ AppliedBar (Chỉ Xóa)
+  const handleApplyAction = async (action: string) => {
+    if (selectedIds.length === 0) {
+      alert("Vui lòng chọn ít nhất một danh mục!");
+      return;
+    }
+
+    if (action === "delete") {
+      const confirm = window.confirm(
+        `CẢNH BÁO: Bạn có chắc muốn xóa vĩnh viễn ${selectedIds.length} danh mục đã chọn?`
+      );
+      if (!confirm) return;
+
+      try {
+        // Gọi API xóa từng item
+        await Promise.all(
+          selectedIds.map((id) => api.del(`/api/categories/${id}`))
+        );
+
+        alert("Đã xóa các danh mục được chọn!");
+        setSelectedIds([]); // Reset selection
+        setRefreshTrigger((prev) => prev + 1); // Trigger reload table
+        router.refresh();
+      } catch (error) {
+        console.error("Lỗi khi xóa:", error);
+        alert("Có lỗi xảy ra khi xóa danh mục!");
+      }
+    }
   };
 
   return (
     <div className="p-6">
       <h1 className="text-black mb-[30px] font-[700] text-[32px]">
-        Quản lý danh mục
+        Quản lý Danh mục
       </h1>
-      <FilterSection filters={filters} onReset={handleReset} />
-      <AppliedBar linktocreate="/admin/categories/create" trigger={1}/>
-      <CategoryTable pathAdmin="admin" />
+
+      <FilterSection filters={filters} />
+
+      <AppliedBar
+        linktocreate="/admin/categories/create"
+        onApplyAction={handleApplyAction}
+        trigger={1} // trigger=1 để ẩn nút Thùng rác nếu không cần, hoặc 0 để hiện
+      />
+
+      <CategoryTable
+        selectedIds={selectedIds}
+        setSelectedIds={setSelectedIds}
+        refreshTrigger={refreshTrigger}
+      />
     </div>
   );
 }
