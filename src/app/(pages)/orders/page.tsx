@@ -42,45 +42,54 @@ type OrderItemView = {
 
 export default function OrderHistoryPage() {
   const [orders, setOrders] = useState<OrderDTO[]>([]);
-  const [orderItemsMap, setOrderItemsMap] = useState<Record<string, OrderItemView[]>>({});
+  const [orderItemsMap, setOrderItemsMap] = useState<
+    Record<string, OrderItemView[]>
+  >({});
   const [selected, setSelected] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadOrders = async () => {
-      const orders = await api.get<OrderDTO[]>("/api/order/my");
-      setOrders(orders);
+  const loadOrders = async () => {
+    const orders = await api.get<OrderDTO[]>("/api/order/my");
+    setOrders(orders);
 
-      const map: Record<string, OrderItemView[]> = {};
+    const map: Record<string, OrderItemView[]> = {};
 
-      for (const order of orders) {
-        const detailedItems: OrderItemView[] = [];
+    for (const order of orders) {
+      const detailedItems: OrderItemView[] = [];
 
-        for (const it of order.items) {
-          const product = await api.get<ProductDTO>(`/api/product/${it.productId}`);
+      for (const it of order.items) {
+        const product = await api.get<ProductDTO>(
+          `/api/product/${it.productId}`,
+        );
 
-          detailedItems.push({
-            orderItemId: it.productId,
-            title: product.name,
-            image: product.avatar,
-            platform: product.platform,
-            version: product.version,
-            quantity: it.quantity,
-            price: product.price,
-            discount: product.discount,
-            isDigital: product.type === "DIGITAL",
-          });
-        }
-
-        map[order._id] = detailedItems;
+        detailedItems.push({
+          orderItemId: it.productId,
+          title: product.name,
+          image: product.avatar,
+          platform: product.platform,
+          version: product.version,
+          quantity: it.quantity,
+          price: product.price,
+          discount: product.discount,
+          isDigital: product.type === "DIGITAL",
+        });
       }
 
-      setOrderItemsMap(map);
-      if (orders.length > 0) setSelected(orders[0]._id);
-    };
+      map[order._id] = detailedItems;
+    }
 
+    setOrderItemsMap(map);
+
+    if (orders.length > 0 && !selected) {
+      setSelected(orders[0]._id);
+    }
+  };
+
+  useEffect(() => {
     loadOrders();
   }, []);
+
   const selectedOrder = orders.find((o) => o._id === selected);
+
   return (
     <div className="flex gap-6 px-6 py-10">
       {/* LEFT */}
@@ -96,15 +105,16 @@ export default function OrderHistoryPage() {
           />
         ))}
       </div>
-      
+
       {/* RIGHT */}
       <div className="w-[400px] shrink-0">
-        {selected && orderItemsMap[selected] ? (
+        {selected && orderItemsMap[selected] && selectedOrder ? (
           <OrderHistoryDetailPanel
             orderId={selected}
             items={orderItemsMap[selected]}
-            shippingAddress={selectedOrder.shippingAddress}
+            shippingAddress={selectedOrder?.shippingAddress}
             status={selectedOrder?.status}
+            onCancelled={loadOrders}   // ✅ AUTO REFRESH AFTER CANCEL
           />
         ) : (
           <div className="text-[#6f6f6f] text-sm pt-16">
@@ -115,3 +125,4 @@ export default function OrderHistoryPage() {
     </div>
   );
 }
+
