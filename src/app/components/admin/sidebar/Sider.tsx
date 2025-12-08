@@ -31,15 +31,15 @@ export default function Sider() {
     },
     { icon: <FaListCheck />, label: "Quản lý đơn hàng", href: "/admin/orders" },
     { icon: <FaUser />, label: "Quản lý người dùng", href: "/admin/users" },
-    {
-      icon: <FaUserGroup />,
-      label: "Thông tin liên hệ",
-      href: "/admin/contacts",
-    },
+    // {
+    //   icon: <FaUserGroup />,
+    //   label: "Thông tin liên hệ",
+    //   href: "/admin/contacts",
+    // },
   ];
 
   const settingsMenu = [
-    { icon: <FaGear />, label: "Cài đặt chung", href: "/admin/settings" },
+    // { icon: <FaGear />, label: "Cài đặt chung", href: "/admin/settings" },
     {
       icon: <FaUserGear />,
       label: "Thông tin cá nhân",
