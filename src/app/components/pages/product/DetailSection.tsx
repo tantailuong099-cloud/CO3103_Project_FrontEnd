@@ -3,11 +3,35 @@
 import Image from "next/image";
 import { useState } from "react";
 
-// Sửa: Nhận `product` từ props
+// Helper: convert YouTube URL -> embed URL
+function getYoutubeEmbedUrl(url: string): string | null {
+  try {
+    const u = new URL(url);
+
+    // youtu.be/VIDEO_ID
+    if (u.hostname.includes("youtu.be")) {
+      const id = u.pathname.replace("/", "");
+      return id ? `https://www.youtube.com/embed/${id}` : null;
+    }
+
+    // youtube.com/watch?v=VIDEO_ID
+    if (
+      u.hostname.includes("youtube.com") ||
+      u.hostname.includes("www.youtube.com")
+    ) {
+      const v = u.searchParams.get("v");
+      if (v) return `https://www.youtube.com/embed/${v}`;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export default function DetailSection({ product }: { product: any }) {
   const [expanded, setExpanded] = useState(false);
 
-  // Hiển thị loading nếu chưa có data
   if (!product) {
     return (
       <section className="w-full bg-[#262626] text-white min-h-[50vh] grid place-items-center">
@@ -16,72 +40,132 @@ export default function DetailSection({ product }: { product: any }) {
     );
   }
 
-  // Sửa: Tạo bảng details từ `product`
-  const details = [
-    { label: "Genre", value: product.type || "N/A" },
-    { label: "Platform", value: "Nintendo Switch 2, PS5, XBOX" }, // Giữ hardcode (không có trong schema)
-    { label: "ESRB", value: product.ageConstraints ? `Ages ${product.ageConstraints}+` : "N/A" },
-    { label: "Year Production", value: product.releaseDate ? new Date(product.releaseDate).getFullYear() : "N/A" },
-    { label: "Manufacturer", value: "ABC" }, // Giữ hardcode (không có trong schema)
-    { label: "Game file size", value: "ABC" }, // Giữ hardcode (không có trong schema)
-    { label: "Players", value: product.minPlayer ? `Up to ${product.minPlayer} players` : "N/A" },
-    { label: "Supported play modes", value: "TV mode, Tabletop mode, Handheld mode" }, // Giữ hardcode
-    { label: "Supported languages", value: "..." }, // Giữ hardcode
-  ];
+  // Build details table: chỉ push khi có value
+  type DetailRow = { label: string; value: string };
+  const details: DetailRow[] = [];
 
-  // Sửa: Lấy mô tả từ `product.description`
+  if (product.type) {
+    details.push({ label: "Genre", value: String(product.type) });
+  }
+
+  if (product.language) {
+    details.push({ label: "Platform", value: String(product.language) });
+  }
+
+  if (product.ageConstraints) {
+    details.push({
+      label: "ESRB",
+      value: `Ages ${product.ageConstraints}+`,
+    });
+  }
+
+  if (product.releaseDate) {
+    const year = new Date(product.releaseDate).getFullYear();
+    if (!Number.isNaN(year)) {
+      details.push({
+        label: "Year Production",
+        value: String(year),
+      });
+    }
+  }
+
+  if (product.manufactor) {
+    details.push({
+      label: "Manufacturer",
+      value: String(product.manufactor),
+    });
+  }
+
+  if (product.gameFileSize) {
+    details.push({
+      label: "Game file size",
+      value: String(product.gameFileSize),
+    });
+  }
+
+  const players = product.playerNumber ?? product.minPlayer;
+  if (players) {
+    details.push({
+      label: "Players",
+      value: `Up to ${players} players`,
+    });
+  }
+
+  if (product.playmode) {
+    details.push({
+      label: "Supported play modes",
+      value: String(product.playmode),
+    });
+  }
+
+  // description -> story
   const allParagraphs = product.description
-    ? product.description.split('\n').filter((p: string) => p.trim() !== "") 
-    : ["No description available."];
-  
-  const storyParagraphs = allParagraphs.slice(0, 2); // 2 đoạn đầu
-  const moreStory = allParagraphs.slice(2); // Các đoạn còn lại
+    ? product.description.split("\n").filter((p: string) => p.trim() !== "")
+    : [];
+
+  const storyParagraphs = allParagraphs.slice(0, 2);
+  const moreStory = allParagraphs.slice(2);
+
+  // YouTube embed src từ videoLink
+  const embedUrl =
+    typeof product.videoLink === "string"
+      ? getYoutubeEmbedUrl(product.videoLink)
+      : null;
 
   return (
     <section className="w-full bg-[#262626] text-white">
-      {/* Header (Giữ nguyên) */}
+      {/* Header */}
       <div className="flex items-center bg-gradient-to-r from-[#fe8c31] to-[#f9393a] h-8 px-6 md:px-10 mb-6 rounded-sm">
-        <p className="text-sm md:text-base font-bold tracking-wide">PRODUCT DETAILS</p>
+        <p className="text-sm md:text-base font-bold tracking-wide">
+          PRODUCT DETAILS
+        </p>
       </div>
 
-      {/* Trailer + Table (SỬA BẢNG) */}
+      {/* Trailer + Table */}
       <div className="flex flex-col lg:flex-row justify-center items-start gap-6 md:gap-8 px-6 md:px-10 mb-12">
-        {/* Trailer (Giữ nguyên, vì không có trong schema) */}
-        <div className="w-full lg:w-[480px] aspect-video rounded-md overflow-hidden shadow-md">
-          <iframe
-            width="100%"
-            height="100%"
-            src="https://www.youtube.com/embed/6XGeJwsUP9c"
-            title="Hollow Knight: Silksong Trailer"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-            className="rounded-md"
-          />
-        </div>
+        {/* Trailer: chỉ render nếu có embedUrl hợp lệ */}
+        {embedUrl && (
+          <div className="w-full lg:w-[480px] aspect-video rounded-md overflow-hidden shadow-md">
+            <iframe
+              width="100%"
+              height="100%"
+              src={embedUrl}
+              title={product.name || "Product trailer"}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              className="rounded-md"
+            />
+          </div>
+        )}
 
-        {/* Details Table (SỬA DATA) */}
-        <div className="w-full lg:w-[640px] border border-[#e8e7e7] rounded-md overflow-hidden">
-          {/* Dùng `details` đã tạo động ở trên */}
-          {details.map((d, i) => (
-            <div key={i} className="flex border-b border-[#e8e7e7] last:border-b-0">
-              <div className="w-[220px] bg-[#1e1e1e] text-center font-semibold text-xs md:text-sm py-2.5 md:py-3 border-r border-[#e8e7e7]">
-                {d.label}
+        {/* Details Table – chỉ render nếu có ít nhất 1 dòng */}
+        {details.length > 0 && (
+          <div className="w-full lg:w-[640px] border border-[#e8e7e7] rounded-md overflow-hidden">
+            {details.map((d, i) => (
+              <div
+                key={i}
+                className="flex border-b border-[#e8e7e7] last:border-b-0"
+              >
+                <div className="w-[220px] bg-[#1e1e1e] text-center font-semibold text-xs md:text-sm py-2.5 md:py-3 border-r border-[#e8e7e7]">
+                  {d.label}
+                </div>
+                <div className="flex-1 text-center text-[#bababa] text-xs md:text-sm py-2.5 md:py-3 bg-[#2b2b2b]">
+                  {d.value}
+                </div>
               </div>
-              <div className="flex-1 text-center text-[#bababa] text-xs md:text-sm py-2.5 md:py-3 bg-[#2b2b2b]">
-                {d.value}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Story Section (SỬA DATA) */}
+      {/* Story Section */}
       <div className="relative w-full h-150 overflow-hidden rounded-lg">
-        {/* Background (SỬA IMAGE) */}
+        {/* Background */}
         <div className="absolute inset-0">
           <Image
-            // Dùng ảnh đầu tiên trong gallery hoặc avatar làm nền
-            src={product.productImage?.[1] || product.avatar || "/images/silksong_story_bg.webp"}
+            src={
+              product.productImage?.[1]            
+            }
             alt="Story Section Background"
             fill
             className="object-cover opacity-50"
@@ -89,30 +173,36 @@ export default function DetailSection({ product }: { product: any }) {
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#1d1d1dcc] to-[#262626]" />
         </div>
 
-        {/* Foreground (SỬA TEXT) */}
+        {/* Foreground */}
         <div className="relative z-10 flex flex-col items-center text-center px-6 md:px-10 py-10 md:py-12">
-          {/* Logo (Giữ nguyên, không có trong schema) */}
           <Image
-            src="/images/silksong_logo.png"
+            src={
+              product.productImage?.[0]            
+            }
             alt="Silksong Logo"
             width={560}
             height={200}
             className="object-contain mb-6 md:mb-8"
           />
 
-          {/* Visible story (Dùng data động) */}
+          {/* Story text */}
           <div className="max-w-3xl space-y-4 md:space-y-5 text-sm md:text-base leading-7 md:leading-8 text-[#eaeaea]">
-            {storyParagraphs.map((text: string, i: number) => (
+            {(storyParagraphs.length
+              ? storyParagraphs
+              : ["No description available."]
+            ).map((text: string, i: number) => (
               <p key={`base-${i}`}>{text}</p>
             ))}
           </div>
 
-          {/* Collapsible extra story (Dùng data động) */}
+          {/* Extra story */}
           {moreStory.length > 0 && (
             <>
               <div
                 className={`max-w-3xl overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out ${
-                  expanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
+                  expanded
+                    ? "max-h-[1000px] opacity-100"
+                    : "max-h-0 opacity-0"
                 }`}
                 aria-hidden={!expanded}
               >
@@ -123,7 +213,6 @@ export default function DetailSection({ product }: { product: any }) {
                 </div>
               </div>
 
-              {/* Toggle (Giữ nguyên) */}
               <button
                 onClick={() => setExpanded((v) => !v)}
                 aria-expanded={expanded}
@@ -138,9 +227,15 @@ export default function DetailSection({ product }: { product: any }) {
                   viewBox="0 0 24 24"
                   strokeWidth={2.5}
                   stroke="currentColor"
-                  className={`w-4 h-4 transition-transform ${expanded ? "rotate-180" : ""}`}
+                  className={`w-4 h-4 transition-transform ${
+                    expanded ? "rotate-180" : ""
+                  }`}
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                  />
                 </svg>
               </button>
             </>

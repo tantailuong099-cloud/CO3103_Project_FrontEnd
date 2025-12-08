@@ -1,54 +1,112 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
-const heroGames = [
-  {
-    id: 1,
-    title: "The Legend of Zelda: Tears of the Kingdom",
-    description:
-      "An epic open-world adventure where the hero explores the lands and skies of Hyrule, crafting new weapons, uncovering ancient secrets, and battling a mysterious force threatening the kingdom.",
-    metacritic: "8.8",
-    ign: "9.6",
-    platform: "NINTENDO",
-    year: "2023",
-    price: "€10+",
-    tags: ["Adventure", "Action"],
-    logo: "/images/zelda.png",
-    thumbnail: "/images/zeld.jpg",
-  },
-];
+const FALLBACK_IMAGE = "/no-image.png";
 
-const thumbnails = [
-  "/images/zelda.jpg",
-  "/images/cod.jpg",
-  "/images/valorant.jpg",
-  "/images/halo reach.webp",
-  "/images/duskasfalls.webp",
-];
+export type HeroProduct = {
+  _id: string;
+  title: string;
+  description: string;
+  releaseDate: string;
+  price: number | string;
+  rating?: number | string;
+  tags?: string[];
+  thumbnail?: string;
+  logo?: string;
+  platform?: string | string[];
+};
 
 export default function Hero() {
+  const [slides, setSlides] = useState<HeroProduct[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const currentGame = heroGames[currentSlide];
+  const [loading, setLoading] = useState(true);
+
+  const mapToHeroProduct = (p: any): HeroProduct => {
+    const images = p.productImage ?? [];
+
+    const logo =
+      images[0]?.url ??
+      images[0]?.secure_url ??
+      images[0] ??
+      p.avatar;
+
+    const thumbnail =
+      images[1]?.url ??
+      images[1]?.secure_url ??
+      images[1] ??
+      images[1]?.url ??
+      images[1]?.secure_url ??
+      images[1] ??
+      p.avatar;
+
+    return {
+      _id: p._id,
+      title: p.name,
+      description: p.description,
+      releaseDate: p.releaseDate,
+      price: p.price,
+      rating: p.metacriticScore ?? p.ignScore,
+      tags: [p.type].filter(Boolean),
+      thumbnail,
+      logo,
+      platform: p.language,
+    };
+  };
+
+  useEffect(() => {
+    const fetchLatest = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/product/latest", {
+          cache: "no-store",
+        });
+
+        const raw = await res.json();
+        const mapped = Array.isArray(raw) ? raw.map(mapToHeroProduct) : [];
+
+        setSlides(mapped);
+      } catch (err) {
+        console.error("Failed to fetch hero products:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLatest();
+  }, []);
 
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % heroGames.length);
+    if (!slides.length) return;
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
   };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + heroGames.length) % heroGames.length);
+    if (!slides.length) return;
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   };
+
+  if (loading) {
+    return (
+      <section className="w-full h-[500px] flex items-center justify-center text-white">
+        Loading...
+      </section>
+    );
+  }
+
+  if (!slides.length) return null;
+
+  const currentGame = slides[currentSlide];
 
   return (
     <section className="relative w-full h-[500px] md:h-[600px] lg:h-[680px] overflow-hidden">
+      {/* Background Image (uses image 3) */}
       <div className="absolute inset-0">
         <Image
-          src={currentGame.thumbnail}
+          src={currentGame.thumbnail || FALLBACK_IMAGE}
           alt={currentGame.title}
           fill
-          className="object-cover"
-          priority
+          className="w-full h-full object-contain bg-black p-1"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
       </div>
@@ -56,6 +114,7 @@ export default function Hero() {
       <div className="relative h-full px-6 lg:px-12">
         <div className="flex flex-col justify-between h-full py-8">
           <div className="flex flex-col justify-center flex-1 max-w-2xl">
+            {/* Logo (uses image 1) */}
             {currentGame.logo && (
               <div className="mb-4">
                 <Image
@@ -73,44 +132,55 @@ export default function Hero() {
             </h1>
 
             <div className="flex flex-wrap items-center gap-2 mb-3">
-              <span className="px-3 py-1 bg-[#FF6B35] text-white text-xs md:text-sm font-semibold rounded border border-[#ff7e4d]">
-                Metacritic: {currentGame.metacritic}
-              </span>
-              <span className="px-3 py-1 bg-[#FF6B35] text-white text-xs md:text-sm font-semibold rounded border border-[#ff7e4d]">
-                IGN: {currentGame.ign}
-              </span>
-              <span className="px-3 py-1 bg-[#4a4a4a] text-white text-xs md:text-sm font-semibold rounded">
-                {currentGame.platform}
-              </span>
-              <span className="px-3 py-1 bg-[#4a4a4a] text-white text-xs md:text-sm font-semibold rounded">
-                {currentGame.year}
-              </span>
-              <span className="px-3 py-1 bg-[#ff3b3b] text-white text-xs md:text-sm font-semibold rounded">
-                {currentGame.price}
-              </span>
+              {currentGame.rating && (
+                <span className="px-3 py-1 bg-[#FF6B35] text-white text-xs font-semibold rounded">
+                  Rating: {currentGame.rating}
+                </span>
+              )}
+
+              {currentGame.platform && (
+                <span className="px-3 py-1 bg-[#4a4a4a] text-white text-xs font-semibold rounded">
+                  {currentGame.platform}
+                </span>
+              )}
+
+              {currentGame.releaseDate && (
+                <span className="px-3 py-1 bg-[#4a4a4a] text-white text-xs font-semibold rounded">
+                  {new Date(currentGame.releaseDate).getFullYear()}
+                </span>
+              )}
+
+              
             </div>
 
             <div className="flex flex-wrap gap-2 mb-4">
-              {currentGame.tags.map((tag, index) => (
+              
+              {currentGame.tags?.map((tag, index) => (
                 <span
                   key={index}
-                  className="px-3 py-1 bg-white/20 text-white text-xs md:text-sm font-medium rounded backdrop-blur-sm"
+                  className="px-3 py-1 bg-white/20 text-white text-xs font-medium rounded backdrop-blur-sm"
                 >
                   {tag}
                 </span>
               ))}
+              {currentGame.price && (
+                <span className="px-3 py-1 bg-[#ff3b3b] text-white text-xs font-semibold rounded">
+                  ${currentGame.price}
+                </span>
+              )}
             </div>
 
-            <p className="text-gray-200 text-sm md:text-base leading-relaxed">
+            <p className="text-gray-200 text-sm md:text-base leading-relaxed line-clamp-4">
               {currentGame.description}
             </p>
           </div>
 
+          {/* Thumbnails */}
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {thumbnails.map((thumb, index) => (
+            {slides.map((item, index) => (
               <button
-                key={index}
-                onClick={() => setCurrentSlide(index % heroGames.length)}
+                key={item._id}
+                onClick={() => setCurrentSlide(index)}
                 className={`flex-shrink-0 w-28 h-[70px] md:w-32 md:h-20 lg:w-36 lg:h-24 rounded overflow-hidden border-2 transition-all ${
                   index === currentSlide
                     ? "border-[#FF6B35] ring-2 ring-[#FF6B35]/50"
@@ -118,8 +188,8 @@ export default function Hero() {
                 }`}
               >
                 <Image
-                  src={thumb}
-                  alt={`Game ${index + 1}`}
+                  src={item.thumbnail || FALLBACK_IMAGE}
+                  alt={item.title}
                   width={144}
                   height={96}
                   className="w-full h-full object-cover"
@@ -130,43 +200,12 @@ export default function Hero() {
         </div>
       </div>
 
-      <button
-        onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-[#FF6B35] focus-visible:outline-none"
-        aria-label="Previous slide"
-      >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
+      {/* Controls */}
+      <button onClick={prevSlide} className="hero-btn left-4">
+        ◀
       </button>
-      <button
-        onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors backdrop-blur-sm focus-visible:ring-2 focus-visible:ring-[#FF6B35] focus-visible:outline-none"
-        aria-label="Next slide"
-      >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5l7 7-7 7"
-          />
-        </svg>
+      <button onClick={nextSlide} className="hero-btn right-4">
+        ▶
       </button>
     </section>
   );

@@ -2,38 +2,65 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import { api } from "@/app/services/api";
 import CardLayout from "@/app/components/pages/card/GameCardSample";
+import { api } from "@/app/services/api";
 
 export default function SearchPage() {
   const params = useSearchParams();
-  const category = params.get("category"); // example: "Action"
+
+  // ✅ ĐỌC ĐÚNG QUERY PARAM
+  const categoryId = params.get("categoryId");
+  const categoryName = params.get("categoryName");
+  const type = params.get("type");
 
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!category) return;
+    if (!categoryId && !type) return;
 
     const fetchData = async () => {
       try {
         setLoading(true);
-        // ✅ Call your backend: /api/categories/Action
-        const data = await api.get(`/api/categories/${category}`);
+
+        let data: any[] = [];
+
+        // ✅ FILTER BY TYPE
+        if (type) {
+          const res = await api.get(`/api/product/type/${type}`);
+          data = res as any[];
+        }
+
+        // ✅ FILTER BY CATEGORY (ĐÃ SỬA ĐÚNG API)
+        if (categoryId) {
+          const res = await api.get(
+            `/api/categories/product/${categoryId}`
+          );
+          data = res as any[];
+        }
+
+        console.log("✅ SEARCH RESULT:", data);
         setProducts(data);
       } catch (error) {
-        console.error("Error loading products:", error);
+        console.error("❌ Error loading products:", error);
+        setProducts([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [category]);
+  }, [categoryId, type]);
 
   return (
     <main className="p-10 text-white">
-      <h1 className="text-2xl mb-6">Category: {category}</h1>
+      <h1 className="text-2xl mb-6">
+        {type
+          ? `Type: ${type}`
+          : categoryName
+          ? `Category: ${categoryName}`
+          : "Search"}
+      </h1>
 
       {loading ? (
         <p>Loading...</p>
@@ -44,12 +71,12 @@ export default function SearchPage() {
           {products.map((item) => (
             <CardLayout
               key={item._id}
-              id={item._id.toString()}
+              id={item._id}
               title={item.name}
               price={item.price}
-              image={item.avatar}
-              genre={item.genre}
-              rating = {item.metacriticScore}
+              avatar={item.avatar}
+              category={item.categoryName}
+              rating={item.metacriticScore}
             />
           ))}
         </div>

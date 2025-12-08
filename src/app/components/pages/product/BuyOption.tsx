@@ -3,65 +3,69 @@
 import RatingStars from "./RatingStars";
 import { useState } from "react";
 import { api } from "@/app/services/api";
+import { useRouter } from "next/navigation";
+import { getMe } from "@/app/services/auth";
 
 const toNum = (v: number | string | null | undefined) =>
   v == null ? NaN : parseFloat(String(v).replace(/[^0-9.]/g, ""));
 const fmt = (n: number) => `$${Math.max(0, n).toFixed(2).replace(/\.00$/, "")}`;
 
 export default function BuyOption({ product }: { product: any }) {
+  const router = useRouter(); 
   const {
     _id,
     name,
     type,
     price,
     version,
-    category,
-    discount = null,
+    categoryName,        // string: "action"
     metacriticScore,
     ignScore,
     releaseDate,
     ageConstraints,
-    images = [],
-    image
+    productImage = [],
+    avatar,
+    language,        // language = platform
+    videoLink
   } = product;
 
   const base = toNum(price);
-  const off = toNum(discount);
-  const hasDiscount = Number.isFinite(base) && Number.isFinite(off) && off > 0 && off < base;
-  const finalPrice = hasDiscount ? base - off : base;
+  const finalPrice = base;
 
   const [qty, setQty] = useState(1);
-  const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
-  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
 
-  const versions=[];
-  versions[0]=version;
-  const platforms = ["Nintendo Switch 2", "PS5", "XBOX"];
+  // Platform list từ language (nếu muốn show)
+  const platforms = language
+    ? language.split(",").map((p: string) => p.trim())
+    : [];
 
   const year = releaseDate ? new Date(releaseDate).getFullYear() : "N/A";
 
   const dec = () => setQty((q) => Math.max(1, q - 1));
   const inc = () => setQty((q) => Math.min(99, q + 1));
 
-  const handleAddToCart = () => {
-    if (!selectedVersion) {
-      alert("⚠️ Please choose a Version before adding to cart.");
-      return;
-    }
-    if (!selectedPlatform) {
-      alert("⚠️ Please choose a Platform before adding to cart.");
-      return;
-    }
-    try {
-        api.post("/api/cart/add", {
-          productId: _id,
-          quantity: qty,
-        });
-        alert("✅ Added to cart!");
-      } catch (err) {
-        console.error(err);
-        alert("❌ Failed to add to cart.");
+  const handleAddToCart = async () => {
+  try {
+    await getMe();
+
+    const res= await api.post(
+      "/api/cart/add",
+      {
+        productId: _id,
+        quantity: qty,
+      },
+      {
+        withCredentials: true, 
       }
+    );
+    console.log("🛒 Cart sau khi thêm:", res);
+
+    alert("✅ Added to cart!");
+  } catch (err) {
+    console.error(err);
+
+    router.push("/login");
+  }
   };
 
   return (
@@ -71,68 +75,60 @@ export default function BuyOption({ product }: { product: any }) {
       {/* Chips */}
       <div className="mt-3 flex items-center gap-2 flex-wrap">
         <Chip text={String(year)} />
-        <Chip text={ageConstraints ? `Ages ${ageConstraints}+` : "Not Rated"} color="accent" />
-        <OutlineChip label="Metacritic:" value={metacriticScore ? metacriticScore.toFixed(1) : "N/A"} />
-        <OutlineChip label="IGN:" value={ignScore ? ignScore.toFixed(1) : "N/A"} />
+        <Chip
+          text={ageConstraints ? `Ages ${ageConstraints}+` : "Not Rated"}
+          color="accent"
+        />
+        <OutlineChip
+          label="Metacritic:"
+          value={metacriticScore ? metacriticScore.toFixed(1) : "N/A"}
+        />
+        <OutlineChip
+          label="IGN:"
+          value={ignScore ? ignScore.toFixed(1) : "N/A"}
+        />
       </div>
 
       {/* Rating */}
       <div className="mt-4 flex items-center gap-5">
         <RatingStars rating={metacriticScore} reviews={288} />
         <div className="h-4 w-px bg-gray-600" />
-        <button className="text-[#bababa] text-sm hover:text-white transition">View ratings</button>
+        <button className="text-[#bababa] text-sm hover:text-white transition">
+          View ratings
+        </button>
       </div>
 
+      {/* Genre */}
       <Row label="Genre">
-        <span className="text-white text-sm">{category}</span> 
+        <span className="text-white text-sm capitalize">{categoryName}</span>
       </Row>
 
+      {/* Type */}
       <Row label="Type">
-        <Pill>Digital</Pill>
+        <Pill>{type}</Pill>
       </Row>
 
-      <Row label="Option">
-        <div className="flex flex-wrap gap-2">
-          {versions.map((v) => (
-            <button
-              key={v}
-              onClick={() => setSelectedVersion(v)}
-              className={`px-3 py-1 rounded-[12px] text-sm transition-colors duration-200 ${
-                selectedVersion === v
-                  ? "bg-[#fe8c31] text-white"
-                  : "bg-[#666666] text-white hover:bg-[#777]"
-              }`}
-            >
-              {v}
-            </button>
-          ))}
-        </div>
-      </Row>
+      {/* Version (chỉ hiển thị) */}
+      {version && (
+        <Row label="Version">
+          <span className="text-white text-sm">{version}</span>
+        </Row>
+      )}
 
-      <Row label="Platform">
-        <div className="flex flex-wrap gap-2">
-          {platforms.map((p) => (
-            <button
-              key={p}
-              onClick={() => setSelectedPlatform(p)}
-              className={`px-3 py-1 rounded-[12px] text-sm transition-colors duration-200 ${
-                selectedPlatform === p
-                  ? "bg-[#fe8c31] text-white"
-                  : "bg-[#666666] text-white hover:bg-[#777]"
-              }`}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-      </Row>
+      {/* Platform = language (hiển thị text/pill, không chọn nữa) */}
+      {platforms.length > 0 && (
+        <Row label="Platform">
+          <div className="flex flex-wrap gap-2">
+            {platforms.map((p: string) => (
+              <Pill key={p}>{p}</Pill>
+            ))}
+          </div>
+        </Row>
+      )}
 
       {/* PRICE */}
       <div className="mt-6 flex items-end gap-3">
         <p className="text-2xl font-bold text-white">{fmt(finalPrice)}</p>
-        {hasDiscount && (
-          <p className="text-md line-through text-gray-400">{fmt(base)}</p>
-        )}
       </div>
 
       {/* Quantity + Add to Cart */}
@@ -174,7 +170,11 @@ function OutlineChip({ label, value }: { label: string; value: string }) {
 }
 
 function Pill({ children }: { children: React.ReactNode }) {
-  return <span className="px-3 py-1 rounded-[12px] text-sm bg-[#2b2b2b] text-gray-200">{children}</span>;
+  return (
+    <span className="px-3 py-1 rounded-[12px] text-sm bg-[#2b2b2b] text-gray-200">
+      {children}
+    </span>
+  );
 }
 
 function Qty({ qty, dec, inc }: { qty: number; dec: () => void; inc: () => void }) {

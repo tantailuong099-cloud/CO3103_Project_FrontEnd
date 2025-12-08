@@ -28,8 +28,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} bg-[#0e0e0f] text-white antialiased`}
-      >
+          suppressHydrationWarning
+          className={`${geistSans.variable} ${geistMono.variable} bg-[#0e0e0f] text-white antialiased`}
+        >
         <div className="flex min-h-screen flex-col">
           <Navbar />
           <main className="flex-1">{children}</main>

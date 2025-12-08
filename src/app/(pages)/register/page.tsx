@@ -1,16 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { register, login, getToken} from "@/app/services/auth";
+import Image from "next/image";
+import { useState } from "react";
+import { register, login } from "@/app/services/auth";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function RegisterPage() {
   const router = useRouter();
-
-  // Nếu đã đăng nhập rồi, tự chuyển về trang chủ
-  useEffect(() => {
-    if (getToken()) router.replace("/");
-  }, [router]);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -30,17 +27,19 @@ export default function RegisterPage() {
 
     try {
       setLoading(true);
-      // 1) gọi register
+
+      // ✅ Đăng ký
       await register(name.trim(), email.trim(), password);
 
-      // 2) đăng nhập luôn để có token (UX tốt hơn)
+      // ✅ Login để backend set COOKIE
       await login(email.trim(), password);
 
-      // 3) điều hướng
-      router.push("/"); // hoặc /cart
+      // ✅ Sau khi có cookie → vào My Account hoặc Cart
+      router.push("/");
+
     } catch (e: any) {
-      // NestJS có thể trả lỗi "Email already exists"
-      const msg = typeof e?.message === "string" ? e.message : "Đăng ký thất bại.";
+      const msg =
+        typeof e?.message === "string" ? e.message : "Đăng ký thất bại.";
       setErr(msg);
     } finally {
       setLoading(false);
@@ -48,56 +47,92 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50">
-      <form onSubmit={onSubmit} className="bg-white shadow p-6 rounded-lg w-[360px] space-y-3">
-        <h1 className="text-2xl font-bold text-center">Tạo tài khoản</h1>
+    <main className="min-h-screen flex items-center justify-center bg-[#1e1e1e] text-white px-4">
+      <div className="w-full max-w-md bg-[#262626] rounded-2xl shadow-lg border border-[#303030] p-8">
+        <div className="flex justify-center mb-8">
+          <Image src="/icon/logo.png" alt="Logo" width={160} height={50} />
+        </div>
 
-        <input
-          type="text"
-          placeholder="Họ và tên"
-          className="border p-2 w-full rounded"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
+        <h1 className="text-2xl font-semibold text-center mb-6">
+          Tạo tài khoản
+        </h1>
 
-        <input
-          type="email"
-          placeholder="Email"
-          className="border p-2 w-full rounded"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <form onSubmit={onSubmit} className="space-y-5">
+          <div>
+            <label className="block text-sm text-gray-300 mb-2">
+              Họ và tên
+            </label>
+            <input
+              type="text"
+              placeholder="Nguyễn Văn A"
+              className="w-full rounded-lg bg-[#1a1a1a] border border-[#3a3a3a] px-4 py-3 text-white outline-none focus:border-[#fe8c31]"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
 
-        <input
-          type="password"
-          placeholder="Mật khẩu (≥ 6 ký tự)"
-          className="border p-2 w-full rounded"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+          <div>
+            <label className="block text-sm text-gray-300 mb-2">
+              Email
+            </label>
+            <input
+              type="email"
+              placeholder="you@example.com"
+              className="w-full rounded-lg bg-[#1a1a1a] border border-[#3a3a3a] px-4 py-3 text-white outline-none focus:border-[#fe8c31]"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
 
-        <input
-          type="password"
-          placeholder="Xác nhận mật khẩu"
-          className="border p-2 w-full rounded"
-          value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
-        />
+          <div>
+            <label className="block text-sm text-gray-300 mb-2">
+              Mật khẩu
+            </label>
+            <input
+              type="password"
+              placeholder="••••••••"
+              className="w-full rounded-lg bg-[#1a1a1a] border border-[#3a3a3a] px-4 py-3 text-white outline-none focus:border-[#fe8c31]"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
 
-        {err && <p className="text-red-500 text-sm">{err}</p>}
+          <div>
+            <label className="block text-sm text-gray-300 mb-2">
+              Xác nhận mật khẩu
+            </label>
+            <input
+              type="password"
+              placeholder="••••••••"
+              className="w-full rounded-lg bg-[#1a1a1a] border border-[#3a3a3a] px-4 py-3 text-white outline-none focus:border-[#fe8c31]"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+            />
+          </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded disabled:opacity-60"
-        >
-          {loading ? "Đang tạo tài khoản..." : "Đăng ký"}
-        </button>
+          {err && (
+            <p className="text-red-400 text-sm text-center">{err}</p>
+          )}
 
-        <p className="text-center text-sm text-gray-500">
-          Đã có tài khoản? <a href="/login" className="text-blue-600 hover:underline">Đăng nhập</a>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#fe8c31] hover:bg-[#ff9330] text-white py-3 rounded-lg font-semibold transition-all disabled:opacity-50"
+          >
+            {loading ? "Đang tạo tài khoản..." : "Đăng ký"}
+          </button>
+        </form>
+
+        <p className="text-center text-sm text-gray-400 mt-6">
+          Đã có tài khoản?{" "}
+          <Link
+            href="/login"
+            className="text-[#fe8c31] hover:underline font-medium"
+          >
+            Đăng nhập
+          </Link>
         </p>
-      </form>
+      </div>
     </main>
   );
 }
