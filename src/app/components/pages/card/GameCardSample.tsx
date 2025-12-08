@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation"; // ✅ thêm
 
 export type CardProps = {
-  id: string;                     // ✅ add this so we can link to /product/:id
+  id: string;
   title: string;
   category?: string;
   subtitle?: string;
@@ -14,7 +15,9 @@ export type CardProps = {
   avatar: string;
   tags?: string[];
 };
+
 const FALLBACK_IMAGE = "/no-image.png";
+
 export default function CardLayout({
   id,
   title,
@@ -24,6 +27,8 @@ export default function CardLayout({
   discount = null,
   avatar,
 }: CardProps) {
+  const router = useRouter(); // ✅ dùng để điều hướng
+
   // --- helpers ---
   const toNumber = (v: number | string | null | undefined) =>
     v == null ? NaN : parseFloat(String(v).replace(/[^0-9.]/g, ""));
@@ -48,31 +53,30 @@ export default function CardLayout({
         shadow-[0_0_6px_rgba(0,0,0,0.4)]
         transition-colors duration-200
         hover:border-[#303030] hover:shadow-[0_0_10px_rgba(0,0,0,0.5)]
-        h-[420px]
+        h-[430px]
       "
     >
-      {/* ✅ Wrap the top part in a Link to the detail page */}
+      {/* Toàn bộ phần trên dẫn tới trang chi tiết */}
       <Link href={`/product/${id}`} className="flex flex-col flex-1">
         {/* Image */}
-        
         <div className="relative w-full h-[260px] bg-black overflow-hidden shrink-0">
           <Image
             src={avatar && avatar.trim() !== "" ? avatar : FALLBACK_IMAGE}
             alt={title}
             fill
-            className="object-cover"   // ⬅️ was object-contain
+            className="object-cover"
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
           />
         </div>
+
         {/* Content */}
         <div className="flex flex-col flex-1 p-3 text-white">
           {/* Title */}
           <div className="h-[40px]">
             <h3 className="text-sm font-semibold leading-tight line-clamp-2">
-            {title}
-          </h3>
+              {title}
+            </h3>
           </div>
-          
 
           {/* Genres + Rating */}
           <div className="mt-2 flex items-center gap-2">
@@ -97,7 +101,8 @@ export default function CardLayout({
                   {fmt(newPrice)}
                 </span>
               </>
-            ) : (<span className="text-[#fe8c31] text-sm font-semibold">
+            ) : (
+              <span className="text-[#fe8c31] text-sm font-semibold">
                 {Number.isFinite(base) ? fmt(base) : String(price)}
               </span>
             )}
@@ -105,10 +110,12 @@ export default function CardLayout({
         </div>
       </Link>
 
-      {/* ✅ Add to cart stays clickable, does NOT navigate */}
+      {/* Nút Add to cart: cũng push sang trang chi tiết + không margin “thò” ra ngoài */}
       <button
+        onClick={() => router.push(`/product/${id}`)} // ✅ click -> vào detail
         className="
-          mx-3 mb-3 rounded-lg text-sm font-medium py-2
+          mx-3 mb-3 mt-auto   /* mt-auto đẩy nút xuống đáy card, mb-3 là padding trong card */
+          rounded-lg text-sm font-medium py-2
           bg-[#fe8c31] text-white
           transition-colors duration-200
           hover:bg-[#ff9330] active:bg-[#e77f25]

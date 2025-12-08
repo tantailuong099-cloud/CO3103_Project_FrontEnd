@@ -1,10 +1,9 @@
 "use client";
-import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useRef } from "react";
 import CardLayout from "@/app/components/pages/card/GameCardSample";
 import { api } from "@/app/services/api";
-
+import { useSearchParams, useRouter } from "next/navigation";
 interface Product {
   id: number;
   title: string;
@@ -26,7 +25,7 @@ export default function ProductSection({
   variant = "default",
 }: ProductSectionProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
+  const router = useRouter();
   const scroll = (direction: "left" | "right") => {
     if (!scrollContainerRef.current) return;
     const scrollAmount = 300;
@@ -39,7 +38,7 @@ export default function ProductSection({
       behavior: "smooth",
     });
   };
-    const params = useSearchParams();
+    //const params = useSearchParams();
   
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -58,7 +57,7 @@ export default function ProductSection({
         };
 
         fetchData();
-      }, []); // ✅ IMPORTANT: only run once
+      }, []); 
 
 
   return (
@@ -80,25 +79,16 @@ export default function ProductSection({
             </div>
           </div>
 
-          <a
-            href="#"
+          <button
+            onClick={() => router.push("/search")}
             className="text-gray-400 hover:text-[#FF6B35] transition-colors flex items-center gap-2 text-sm md:text-base"
           >
             <span>View All</span>
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-          </a>
+          </button>
+
         </div>
 
         {/* Horizontal Scroll Section */}

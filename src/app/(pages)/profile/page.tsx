@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { api } from "@/app/services/api";
+import { useRouter } from "next/navigation";
 
 type UserDTO = {
   _id: string;
@@ -16,11 +17,23 @@ type UserDTO = {
 export default function ProfilePage() {
   const [user, setUser] = useState<UserDTO | null>(null);
   const [saving, setSaving] = useState(false);
-
+  const [loading, setLoading] = useState(true); // ✅ thêm loading
+  const router = useRouter();
   useEffect(() => {
     const loadProfile = async () => {
-      const me = await api.get<UserDTO>("/api/users/me");
-      setUser(me);
+      try {
+        const me = await api.get<UserDTO>("/api/users/me");
+        setUser(me);
+      } catch (err: any) {
+        console.error("❌ Not logged in:", err);
+
+        // ✅ Nếu cookie không hợp lệ → chuyển sang 404 hoặc login
+        router.replace("/login"); 
+        // hoặc nếu bạn muốn về login:
+        // router.replace("/login");
+      } finally {
+        setLoading(false);
+      }
     };
     loadProfile();
   }, []);

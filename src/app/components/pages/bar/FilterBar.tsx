@@ -136,7 +136,11 @@ export default function FilterDropdown() {
       {/* Dropdown Panel */}
       {open && (
         <div
-          className="mt-4 w-full bg-[#121212] border border-gray-700 rounded-xl shadow-xl p-5 z-10"
+          className="
+            absolute left-0 top-full mt-2
+            w-[700px] max-w-[90vw]
+            bg-[#121212] border border-gray-700 rounded-xl shadow-xl p-5
+          "
         >
           <div className="flex flex-col gap-5 max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
             {filterCategories.map((category) =>

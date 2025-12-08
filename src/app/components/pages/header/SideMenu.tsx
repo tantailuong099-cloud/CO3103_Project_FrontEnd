@@ -12,6 +12,12 @@ enum GameType {
   PHYSICAL = "physical",
 }
 
+enum PlatformType {
+  Nintendo = "nintendo",
+  PS5 = "ps5",
+  XBox = "xbox",
+}
+
 type Category = {
   _id: string;
   name: string;
@@ -22,12 +28,12 @@ type Category = {
 export default function SideMenu({ onClose }: { onClose: () => void }) {
   const [openPanel, setOpenPanel] = useState<string | null>(null);
   const [categories, setCategories] = useState<
-      { _id: string; name: string; description: string }[]
-    >([]);
+    { _id: string; name: string; description: string }[]
+  >([]);
   const router = useRouter();
 
   // ✅ FETCH CATEGORY LIST TỪ API
-    useEffect(() => {
+  useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await api.get<
@@ -58,6 +64,11 @@ export default function SideMenu({ onClose }: { onClose: () => void }) {
     onClose();
   };
 
+  // ✅ PLATFORM SELECT
+  const handlePlatformSelect = (platform: PlatformType) => {
+    router.push(`/search?platform=${platform}`);
+    onClose();
+  };
 
   return (
     <div className="flex h-full w-[300px] bg-[#1e1e1e] text-white flex-col justify-between relative">
@@ -99,14 +110,18 @@ export default function SideMenu({ onClose }: { onClose: () => void }) {
           onClick={() => setOpenPanel("TYPE")}
         />
 
+        {/* 🔥 NEW: PLATFORM */}
+        <MenuItem
+          label="Platform"
+          iconRight={<ChevronDown size={16} />}
+          onClick={() => setOpenPanel("PLATFORM")}
+        />
+
         <MenuItem
           label="Category"
           iconRight={<ChevronDown size={16} />}
           onClick={() => setOpenPanel("CATEGORY")}
         />
-
-        {/* ✅ SYSTEM GROUP */}
-        
       </nav>
 
       {/* Footer */}
@@ -130,6 +145,20 @@ export default function SideMenu({ onClose }: { onClose: () => void }) {
           ]}
           onBack={() => setOpenPanel(null)}
           onSelect={(value) => handleTypeSelect(value as GameType)}
+        />
+      )}
+
+      {/* ✅ PLATFORM PANEL */}
+      {openPanel === "PLATFORM" && (
+        <OptionPanel
+          title="Platform"
+          options={[
+            { label: "Nintendo", value: PlatformType.Nintendo },
+            { label: "PlayStation 5", value: PlatformType.PS5 },
+            { label: "Xbox", value: PlatformType.XBox },
+          ]}
+          onBack={() => setOpenPanel(null)}
+          onSelect={(value) => handlePlatformSelect(value as PlatformType)}
         />
       )}
 

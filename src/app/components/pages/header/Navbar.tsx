@@ -96,12 +96,12 @@ export default function Navbar() {
   const [userOpen, setUserOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // ✅ TẤT CẢ REF ĐẶT ĐÚNG TRONG COMPONENT
+  // TẤT CẢ REF ĐẶT ĐÚNG TRONG COMPONENT
   const notifRef = useRef<HTMLDivElement | null>(null);
   const userRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  /* ✅ CLICK OUTSIDE ĐỂ TẮT TỪNG POPUP */
+  /* CLICK OUTSIDE ĐỂ TẮT TỪNG POPUP */
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
@@ -123,7 +123,7 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  /* ✅ CHECK LOGIN */
+  /* CHECK LOGIN */
   useEffect(() => {
     const checkLogin = async () => {
       try {
@@ -136,7 +136,7 @@ export default function Navbar() {
     checkLogin();
   }, []);
 
-  /* ✅ LOGOUT */
+  /* LOGOUT */
   const handleLogout = async () => {
     await logout();
     setIsLoggedIn(false);
@@ -145,7 +145,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="w-full bg-[#1e1e1e] text-white z-40">
+    <header className="w-full bg-[#1e1e1e] text-white z-999">
       <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
         <div className="h-16 flex items-center gap-4">
 
@@ -178,27 +178,27 @@ export default function Navbar() {
               <IconCart className="h-6 w-6" />
             </button>
 
-            {/* 🔔 NOTIFICATION */}
+            {/* NOTIFICATION */}
             <div className="relative" ref={notifRef}>
               <button onClick={() => setNotifOpen(v => !v)}>
                 <IconBell className="h-6 w-6" />
               </button>
 
               {notifOpen && (
-                <div className="absolute right-0 mt-3 w-72 rounded-xl bg-[#111] p-3 ring-1 ring-white/10 z-50">
+                <div className="absolute right-0 mt-3 w-72 rounded-xl bg-[#111] p-3 ring-1 ring-white/10 z-999">
                   <p className="text-sm">No new notifications</p>
                 </div>
               )}
             </div>
 
-            {/* 👤 USER */}
+            {/* USER */}
             <div className="relative" ref={userRef}>
               <button onClick={() => setUserOpen(v => !v)}>
                 <IconUser className="h-7 w-7" />
               </button>
 
               {userOpen && (
-                <div className="absolute right-0 mt-3 w-44 rounded-xl bg-[#111] p-2 ring-1 ring-white/10 z-50">
+                <div className="absolute right-0 mt-3 w-44 rounded-xl bg-[#111] p-2 ring-1 ring-white/10 z-999">
                   {isLoggedIn ? (
                     <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/20">
                       Đăng xuất
@@ -219,7 +219,7 @@ export default function Navbar() {
 
       {/* DRAWER MENU */}
       {menuOpen && (
-        <div className="fixed inset-0 z-50">
+        <div className="fixed inset-0 z-999">
           <div className="absolute inset-0 bg-black/50" />
           <aside ref={menuRef} className="absolute left-0 top-0 h-full w-[300px] bg-[#111]">
             <SideMenu onClose={() => setMenuOpen(false)} />

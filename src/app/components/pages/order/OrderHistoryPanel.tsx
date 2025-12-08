@@ -13,7 +13,7 @@ export default function OrderHistoryDetailPanel({
   items,
   shippingAddress,
   status,
-  onCancelled, // ✅ callback to refresh parent
+  onCancelled, 
 }: {
   orderId: string;
   items: OrderItemView[];
@@ -28,7 +28,7 @@ export default function OrderHistoryDetailPanel({
     return acc + finalUnit * it.quantity;
   }, 0);
 
-  // ✅ Only allow cancel on these statuses
+  // Only allow cancel on these statuses
   const canCancel = status === "pending" || status === "paid";
 
   const handleCancel = async () => {
@@ -39,7 +39,7 @@ export default function OrderHistoryDetailPanel({
       await api.post(`/api/order/cancel/${orderId}`);
       alert("✅ Order cancelled successfully");
 
-      onCancelled?.(); // ✅ refresh parent data
+      onCancelled?.(); //  refresh parent data
     } catch (err: any) {
       console.error(err);
       alert(err?.response?.data?.message || "❌ Failed to cancel order");
@@ -71,7 +71,7 @@ export default function OrderHistoryDetailPanel({
         <span className="capitalize">{status}</span>
       </div>
 
-      {/* ✅ Cancel Button */}
+      {/*Cancel Button */}
 
       {/* Items */}
       <div className="space-y-4 max-h-[60vh] overflow-auto pr-1">

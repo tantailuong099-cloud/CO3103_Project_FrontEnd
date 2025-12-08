@@ -8,10 +8,10 @@ const money = (n: number) =>
 
 export type OrderHistoryCardProps = {
   orderId: string;
-  date: string;                 // e.g. "14 May, 2025"
+  date: string;               
   items: OrderItemView[];  
   status: string;     // list of items in this order
-  onSelect?: (orderId: string) => void; // ← add this
+  onSelect?: (orderId: string) => void; 
 };
 
 export default function OrderHistoryCard({
@@ -19,7 +19,7 @@ export default function OrderHistoryCard({
   date,
   items,
   status,
-  onSelect,           // ← destructure it
+  onSelect,           
 }: OrderHistoryCardProps) {
   if (!items || items.length === 0) {
     return (
@@ -92,7 +92,7 @@ const statusLabel = statusLabelMap[status] ?? status;
           </div>
 
           <button
-            onClick={() => onSelect?.(orderId)}   // ← use it safely
+            onClick={() => onSelect?.(orderId)}    
             className="text-xs text-[#bdbdbd] hover:text-white transition"
           >
             View Details →
