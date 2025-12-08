@@ -1,29 +1,47 @@
-// src/services/auth.ts
 import { api } from "./api";
 
-type LoginRes = { access_token: string };
+// ✅ Kiểu user đúng theo backend của bạn (/auth/profile)
+export type User = {
+  userId: string;
+  email: string;
+};
 
-export async function register(name: string, email: string, password: string) {
-  // Gọi NestJS: POST /auth/register
-  // Backend của bạn đang yêu cầu { name, email, password }
-  return api.post("/api/auth/register", { name, email, password });
+// ✅ Register
+export async function register(
+  name: string,
+  email: string,
+  password: string
+): Promise<void> {
+  await api.post("/api/auth/register", { name, email, password }, {
+    withCredentials: true,
+  });
 }
 
-export async function login(email: string, password: string) {
-  const data = await api.post<LoginRes>("/api/auth/login", { email, password });
-  if (typeof window !== "undefined") {
-    localStorage.setItem("token", data.access_token);
-  }
-  return data;
+// ✅ Login (cookie httpOnly)
+export async function login(
+  email: string,
+  password: string
+): Promise<void> {
+  await api.post(
+    "/api/auth/login",
+    { email, password },
+    { withCredentials: true }
+  );
 }
 
-export function logout() {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("token");
-  }
+// ✅ Logout (backend clear cookie)
+export async function logout(): Promise<void> {
+  await api.post("/api/auth/logout", null, {
+    withCredentials: true,
+  });
 }
 
-export function getToken() {
-  if (typeof window === "undefined") return undefined;
-  return localStorage.getItem("token") ?? undefined;
+// ✅ Get current user từ cookie
+export async function getMe(): Promise<User> {
+  const res = await api.get<User>("/api/auth/profile", {
+    withCredentials: true,
+  });
+
+  // ✅ Trả về đúng kiểu User (không phải unknown)
+  return res;
 }

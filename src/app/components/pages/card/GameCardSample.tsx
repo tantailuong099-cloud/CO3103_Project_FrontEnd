@@ -6,23 +6,23 @@ import Link from "next/link";
 export type CardProps = {
   id: string;                     // ✅ add this so we can link to /product/:id
   title: string;
-  genre?: string[];
+  category?: string;
   subtitle?: string;
   rating: number | string;
   price: number | string;
   discount?: number | string | null;
-  image: string;
+  avatar: string;
   tags?: string[];
 };
-
+const FALLBACK_IMAGE = "/no-image.png";
 export default function CardLayout({
   id,
   title,
-  genre = [],
+  category,
   rating,
   price,
   discount = null,
-  image,
+  avatar,
 }: CardProps) {
   // --- helpers ---
   const toNumber = (v: number | string | null | undefined) =>
@@ -39,7 +39,6 @@ export default function CardLayout({
   const newPrice = hasDiscount ? base - off : base;
   const ratingText =
     typeof rating === "number" ? rating.toFixed(1) : String(rating);
-  const genreLine = genre.join(", ");
 
   return (
     <div
@@ -49,32 +48,35 @@ export default function CardLayout({
         shadow-[0_0_6px_rgba(0,0,0,0.4)]
         transition-colors duration-200
         hover:border-[#303030] hover:shadow-[0_0_10px_rgba(0,0,0,0.5)]
+        h-[420px]
       "
     >
       {/* ✅ Wrap the top part in a Link to the detail page */}
       <Link href={`/product/${id}`} className="flex flex-col flex-1">
         {/* Image */}
-        <div className="relative w-full aspect-[3/4] overflow-hidden">
+        
+        <div className="relative w-full h-[260px] bg-black overflow-hidden shrink-0">
           <Image
-            src={image}
+            src={avatar && avatar.trim() !== "" ? avatar : FALLBACK_IMAGE}
             alt={title}
             fill
-            className="object-cover"
+            className="object-cover"   // ⬅️ was object-contain
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-            priority
           />
         </div>
-
         {/* Content */}
         <div className="flex flex-col flex-1 p-3 text-white">
           {/* Title */}
-          <h3 className="text-sm font-semibold leading-tight line-clamp-2">
+          <div className="h-[40px]">
+            <h3 className="text-sm font-semibold leading-tight line-clamp-2">
             {title}
           </h3>
+          </div>
+          
 
           {/* Genres + Rating */}
           <div className="mt-2 flex items-center gap-2">
-            <p className="text-xs text-gray-400 truncate flex-1">{genreLine}</p>
+            <p className="text-xs text-gray-400 truncate flex-1">{category}</p>
             <span
               className="text-xs font-semibold border border-[#fe8c31] text-[#fe8c31]
                        rounded-full px-2 py-[2px] leading-none shrink-0"
@@ -111,10 +113,6 @@ export default function CardLayout({
           transition-colors duration-200
           hover:bg-[#ff9330] active:bg-[#e77f25]
         "
-        onClick={() => {
-          console.log("Add to cart clicked for product:", id);
-          // (You can connect to API later: POST /api/cart/add)
-        }}
       >
         Add to cart
       </button>

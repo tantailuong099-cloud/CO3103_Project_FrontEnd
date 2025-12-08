@@ -5,7 +5,7 @@ import BuyOption from "./BuyOption";
 import CardLayout from "@/app/components/pages/card/GameCardSample";
 
 
-export default function BuySection({ product, related }: { product: any, related: any[] }) {
+export default function BuySection({ product }: { product: any}) {
   return (
     <>
       {/* Title + meta (ĐÃ SỬA) */}

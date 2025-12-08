@@ -8,45 +8,70 @@ import BuySection from "@/app/components/pages/product/BuySection";
 import DetailSection from "@/app/components/pages/product/DetailSection";
 import ProductSection from "@/app/components/pages/section/ProductSection";
 
+type Product = {
+  _id: string;
+  name: string;
+  type: "digital" | "physical"; // GameType
+  price: number;
+  version: string;
+
+  category: string; // ✅ string theo Cách 2 (slug | name)
+  categoryName: string;
+  metacriticScore: number;
+  metacriticURL?: string;
+
+  ignScore: number;
+  ignURL?: string;
+
+  releaseDate: string | Date;
+  ageConstraints: number;
+
+  productImage: string[];
+  avatar?: string;
+
+  language: string;   // platform
+  playerNumber?: number;
+
+  manufactor?: string;
+  options?: string[];
+  playmode?: string;
+
+  stock?: number;
+  description?: string;
+
+  videoLink?: string;
+
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+
 export default function ProductDetailPage() {
-  const { id } = useParams<{ id: string }>(); // Get the product ID from URL
-  const [product, setProduct] = useState<any | null>(null);
-  const [related, setRelated] = useState<any[]>([]);
+  const { id } = useParams<{ id: string }>();
+
+  const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-  async function fetchProduct() {
-    try {
-      setLoading(true);
+  useEffect(() => {
+    async function fetchProduct() {
+      try {
+        setLoading(true);
 
-      // ✅ data is already the product
-      const data = await api.get(`/api/product/${id}`);
-      setProduct(data);
+        const data: Product = await api.get(`/api/product/${id}`);
+        setProduct(data);
 
-      // ✅ Get related products
-      const catId = data?.category?._id;
-      if (catId) {
-        const res = await api.get(`/api/categories/${catId}`);
-        setRelated(
-          res
-            .filter((item: any) => item._id !== data._id)
-            .slice(0, 6)
-        );
+      } catch (err) {
+        console.error("Fetch product error:", err);
+        setProduct(null);
+      } finally {
+        setLoading(false);
       }
-
-    } catch (err) {
-      console.error(err);
-      setProduct(null);
-    } finally {
-      setLoading(false);
     }
-  }
 
-  fetchProduct();
-}, [id]);
+    fetchProduct();
+  }, [id]);
 
-
-  if (!loading && !product) return notFound(); // Show 404 if product not found
+  if (!loading && !product) return notFound();
 
   return (
     <main className="min-h-screen bg-[#262626] text-white px-10">
@@ -56,27 +81,24 @@ useEffect(() => {
         <span className="mx-2">/</span>
         <a href="/search" className="hover:text-white">Search</a>
         <span className="mx-2">/</span>
-        <span className="text-white">{product?.name || "Loading..."}</span>
+        <span className="text-white">
+          {product?.name || "Loading..."}
+        </span>
       </nav>
 
-      {/* ---- Top Section: Image + Buy Info ---- */}
-      {product && (
-        <BuySection product={product} related={related} />
-      )}
+      {/* ---- Buy Section ---- */}
+      {product && <BuySection product={product} />}
 
-      {/* ---- Product Details Section ---- */}
-      <div className="mt-16 px-0 md:px-0">
+      {/* ---- Detail Section ---- */}
+      <div className="mt-16">
         <DetailSection product={product} />
       </div>
+      <ProductSection
+              title="FLASH SALE"
+              variant="flash-sale"
+            />
 
-      {/* ---- Related Section ---- */}
-      {related.length > 0 && (
-        <ProductSection
-          title="MORE ITEMS LIKE THIS"
-          products={related}
-          variant="flash-sale"
-        />
-      )}
+      
     </main>
   );
 }

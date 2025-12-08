@@ -9,16 +9,15 @@ interface Product {
   id: number;
   title: string;
   subtitle?: string;
-  genre?: string[];
+  category?: string;
   price: number | string;   
   rating: number | string;  
-  image: string;
+  avatar: string;
   tags?: string[];
 }
 
 interface ProductSectionProps {
   title: string;
-  products: Product[];
   variant?: "flash-sale" | "default";
 }
 
@@ -46,22 +45,21 @@ export default function ProductSection({
     const [loading, setLoading] = useState(true);
   
     useEffect(() => {
-  
-      const fetchData = async () => {
-        try {
-          setLoading(true);
-          // ✅ Call your backend: /api/categories/Action
-          const data = await api.get(`/api/product`);
-          setProducts(data);
-        } catch (error) {
-          console.error("Error loading products:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
-  
-      fetchData();
-    });
+        const fetchData = async () => {
+          try {
+            setLoading(true);
+            const data = await api.get(`/api/product`);
+            setProducts(data as any[]);
+          } catch (error) {
+            console.error("Error loading products:", error);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        fetchData();
+      }, []); // ✅ IMPORTANT: only run once
+
 
   return (
     <section className="py-8 md:py-12">
@@ -125,8 +123,8 @@ export default function ProductSection({
                     id={item._id.toString()}
                     title={item.name}
                     price={item.price}
-                    image={item.avatar}
-                    genre={item.genre}
+                    avatar={item.avatar}
+                    category={item.categoryName}
                     rating={item.metacriticScore}
                   />
                 </div>
