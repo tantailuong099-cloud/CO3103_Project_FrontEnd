@@ -1,26 +1,28 @@
 "use client";
 
 import Image from "next/image";
-import { MockOrderItem } from "@/app/components/mockup/orderItem";
+import { OrderItemView } from "./order-view.type";
 
 const money = (n: number) =>
   `$${Math.max(0, n).toFixed(2).replace(/\.00$/, "")}`;
 
 export default function OrderHistoryDetails({
-  address,
+  shippingAddress,
   items,
   trackingStatus, // "placed" | "processing" | "delivering" | "arrived"
 }: {
-  address: {
-    name: string;
-    phone: string;
-    email: string;
-    street: string;
-    city: string;
-  };
-  items: MockOrderItem[];
+  shippingAddress?: string;
+  items: OrderItemView[];
   trackingStatus: string;
 }) {
+  if (!items || items.length === 0) {
+    return (
+      <div className="bg-[#1b1b1b] border border-[#2e2e2e] rounded-2xl p-4 text-[#888] text-sm">
+        Loading order...
+      </div>
+    );
+  }
+
   const totals = items.reduce(
     (acc, it) => {
       const finalUnit = Math.max(0, it.price - (it.discount ?? 0));
@@ -35,9 +37,12 @@ export default function OrderHistoryDetails({
       {/* Address */}
       <div className="text-sm text-[#cdcdcd]">
         <p className="text-white font-semibold mb-1">Shipping Address</p>
-        {address.name}, {address.phone}, {address.email}
-        <br />
-        {address.street}, {address.city}
+        {shippingAddress ? (
+          shippingAddress
+        ) : (
+          <span className="text-[#888]">No address provided</span>
+        )}
+
       </div>
 
       {/* Tracking (very simplified) */}

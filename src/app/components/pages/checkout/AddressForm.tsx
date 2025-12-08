@@ -6,8 +6,7 @@ export type AddressFormValues = {
   name: string;
   phone: string;
   email: string;
-  street: string;
-  city: string;
+  address: string; // ✅ single string
 };
 
 export type AddressFormErrors = Partial<Record<keyof AddressFormValues, string>>;
@@ -18,23 +17,22 @@ export default function AddressForm({
   onBlur,
   errors,
   disabled,
-  readOnly,
 }: {
   form: AddressFormValues;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   onBlur?: (e: FocusEvent<HTMLInputElement>) => void;
   errors?: AddressFormErrors;
   disabled?: boolean;
-  readOnly?: boolean;
 }) {
   const base =
     "w-full rounded-xl bg-[#1c1c1c] border border-[#2a2a2a] px-4 py-3 text-white placeholder:text-[#8a8a8a] outline-none transition";
   const focus = "focus:border-[#fe8c31] focus:ring-4 focus:ring-[#fe8c31]/15";
-  const invalid = "aria-[invalid=true]:border-[#ff5a5a] aria-[invalid=true]:ring-[#ff5a5a]/20";
+  const invalid =
+    "aria-[invalid=true]:border-[#ff5a5a] aria-[invalid=true]:ring-[#ff5a5a]/20";
   const labelCls = "text-sm text-[#cfcfcf] font-medium";
-  const hintCls = "mt-1 text-xs text-[#9e9e9e]";
   const errCls = "mt-1 text-xs text-[#ff9aa0]";
 
+  // ✅ Field helper (cho phép set readOnly riêng từng field)
   const field = ({
     label,
     name,
@@ -43,6 +41,7 @@ export default function AddressForm({
     autoComplete,
     inputMode,
     pattern,
+    readOnly = false,
   }: {
     label: string;
     name: keyof AddressFormValues;
@@ -51,20 +50,23 @@ export default function AddressForm({
     autoComplete?: string;
     inputMode?: "text" | "email" | "tel" | "numeric";
     pattern?: string;
+    readOnly?: boolean;
   }) => {
     const err = errors?.[name];
+
     return (
       <div className="space-y-1.5">
         <label htmlFor={name} className={labelCls}>
           {label}
         </label>
+
         <input
           id={name}
           name={name}
           type={type}
           placeholder={placeholder}
           value={form[name] as string}
-          onChange={onChange}
+          onChange={readOnly ? undefined : onChange} // ✅ không cho change nếu readOnly
           onBlur={onBlur}
           autoComplete={autoComplete}
           inputMode={inputMode}
@@ -73,8 +75,13 @@ export default function AddressForm({
           readOnly={readOnly}
           aria-invalid={Boolean(err)}
           aria-describedby={err ? `${name}-error` : undefined}
-          className={`${base} ${focus} ${invalid} ${err ? "border-[#ff5a5a]" : ""} ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
+          className={`${base} ${focus} ${invalid}
+            ${err ? "border-[#ff5a5a]" : ""}
+            ${readOnly ? "opacity-60 cursor-not-allowed" : ""}
+            ${disabled ? "opacity-60 cursor-not-allowed" : ""}
+          `}
         />
+
         {err && (
           <p id={`${name}-error`} className={errCls}>
             {err}
@@ -86,12 +93,16 @@ export default function AddressForm({
 
   return (
     <div className="bg-black grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* 🔒 KHÔNG CHO SỬA */}
       {field({
         label: "Full Name",
         name: "name",
         placeholder: "Nguyen Van An",
         autoComplete: "name",
+        readOnly: true,
       })}
+
+      {/* 🔒 KHÔNG CHO SỬA */}
       {field({
         label: "Phone Number",
         name: "phone",
@@ -99,7 +110,10 @@ export default function AddressForm({
         autoComplete: "tel",
         inputMode: "tel",
         pattern: "^[0-9+()\\-\\s]{6,}$",
+        readOnly: true,
       })}
+
+      {/* 🔒 KHÔNG CHO SỬA */}
       {field({
         label: "Email",
         name: "email",
@@ -107,21 +121,19 @@ export default function AddressForm({
         type: "email",
         autoComplete: "email",
         inputMode: "email",
+        readOnly: true,
       })}
+
+      {/* ✅ CHỈ ADDRESS ĐƯỢC PHÉP SỬA */}
       <div className="md:col-span-2">
         {field({
-          label: "Street Address",
-          name: "street",
-          placeholder: "123 ABC street",
-          autoComplete: "address-line1",
+          label: "Delivery Address",
+          name: "address",
+          placeholder: "123 ABC Street, Ward 5, District 10, HCM City",
+          autoComplete: "street-address",
+          readOnly: false, // ✅ MỞ KHÓA
         })}
       </div>
-      {field({
-        label: "City",
-        name: "city",
-        placeholder: "HCM City",
-        autoComplete: "address-level2",
-      })}
     </div>
   );
 }
