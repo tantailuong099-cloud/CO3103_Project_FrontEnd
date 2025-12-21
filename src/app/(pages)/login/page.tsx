@@ -13,7 +13,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  // ✅ Nếu đã đăng nhập rồi mà vào /login -> tự chuyển sang /cart
   useEffect(() => {
     if (typeof window === "undefined") return;
     const token = localStorage.getItem("access_token");
@@ -29,7 +28,6 @@ export default function LoginPage() {
 
     try {
       await login(email.trim(), password);
-      // ✅ Login xong chuyển sang cart + reload app để Navbar nhận token
       window.location.href = "/";
     } catch (err: any) {
       console.error("❌ Login error:", err);
@@ -50,15 +48,11 @@ export default function LoginPage() {
           <Image src="/icon/logo.png" alt="Logo" width={160} height={50} />
         </div>
 
-        <h1 className="text-2xl font-semibold text-center mb-6">
-          Đăng nhập
-        </h1>
+        <h1 className="text-2xl font-semibold text-center mb-6">Đăng nhập</h1>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm text-gray-300 mb-2">
-              Email
-            </label>
+            <label className="block text-sm text-gray-300 mb-2">Email</label>
             <input
               type="email"
               value={email}
@@ -70,9 +64,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-300 mb-2">
-              Mật khẩu
-            </label>
+            <label className="block text-sm text-gray-300 mb-2">Mật khẩu</label>
             <input
               type="password"
               value={password}
@@ -81,11 +73,18 @@ export default function LoginPage() {
               className="w-full rounded-lg bg-[#1a1a1a] border border-[#3a3a3a] px-4 py-3 text-white outline-none focus:border-[#fe8c31]"
               placeholder="••••••••"
             />
+            {/* NÚT QUÊN MẬT KHẨU NẰM Ở ĐÂY */}
+            <div className="flex justify-end mt-2">
+              <Link
+                href="/forgot-password"
+                className="text-xs text-gray-400 hover:text-[#fe8c31] transition-colors"
+              >
+                Quên mật khẩu?
+              </Link>
+            </div>
           </div>
 
-          {error && (
-            <p className="text-red-400 text-sm text-center">{error}</p>
-          )}
+          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
 
           <button
             type="submit"
