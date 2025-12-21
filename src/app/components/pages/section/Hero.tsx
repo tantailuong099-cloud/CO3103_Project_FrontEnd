@@ -58,7 +58,7 @@ export default function Hero() {
   useEffect(() => {
     const fetchLatest = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/product/latest", {
+        const res = await fetch("http://localhost:4000/api/product/latest", {
           cache: "no-store",
         });
 

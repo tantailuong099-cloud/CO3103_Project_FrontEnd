@@ -29,7 +29,7 @@ type Product = {
   productImage: string[];
   avatar?: string;
 
-  language: string;   // platform
+  language: string; // platform
   playerNumber?: number;
 
   manufactor?: string;
@@ -45,10 +45,8 @@ type Product = {
   updatedAt?: string;
 };
 
-
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
-
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -56,10 +54,8 @@ export default function ProductDetailPage() {
     async function fetchProduct() {
       try {
         setLoading(true);
-
         const data: Product = await api.get(`/api/product/${id}`);
         setProduct(data);
-
       } catch (err) {
         console.error("Fetch product error:", err);
         setProduct(null);
@@ -67,38 +63,45 @@ export default function ProductDetailPage() {
         setLoading(false);
       }
     }
-
     fetchProduct();
   }, [id]);
 
-  if (!loading && !product) return notFound();
+  // Tạo một hằng số ảnh mặc định nếu không có avatar hoặc productImage
+  const mainImage =
+    product?.avatar ||
+    product?.productImage?.[0] ||
+    "/images/placeholder-game.png";
+
+  if (loading)
+    return (
+      <div className="min-h-screen bg-[#262626] flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  if (!product) return notFound();
 
   return (
     <main className="min-h-screen bg-[#262626] text-white px-10">
-      {/* ---- Breadcrumb ---- */}
       <nav className="text-sm text-gray-400 px-6 md:px-12 py-8">
-        <a href="/" className="hover:text-white">Home</a>
+        <a href="/" className="hover:text-white">
+          Home
+        </a>
         <span className="mx-2">/</span>
-        <a href="/search" className="hover:text-white">Search</a>
+        <a href="/search" className="hover:text-white">
+          Search
+        </a>
         <span className="mx-2">/</span>
-        <span className="text-white">
-          {product?.name || "Loading..."}
-        </span>
+        <span className="text-white">{product.name}</span>
       </nav>
 
-      {/* ---- Buy Section ---- */}
-      {product && <BuySection product={product} />}
+      {/* Truyền mainImage đã xử lý xuống BuySection */}
+      <BuySection product={{ ...product, avatar: mainImage }} />
 
-      {/* ---- Detail Section ---- */}
       <div className="mt-16">
         <DetailSection product={product} />
       </div>
-      <ProductSection
-              title="FLASH SALE"
-              variant="flash-sale"
-            />
 
-      
+      <ProductSection title="FLASH SALE" variant="flash-sale" />
     </main>
   );
 }

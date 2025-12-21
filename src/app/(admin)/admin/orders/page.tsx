@@ -25,7 +25,6 @@ export default function OrdersPage() {
         { label: "Trạng thái", value: "" },
         { label: "Pending", value: "pending" },
         { label: "Paid", value: "paid" },
-        { label: "Completed", value: "completed" },
         { label: "Cancelled", value: "cancelled" },
       ],
     },
@@ -39,7 +38,7 @@ export default function OrdersPage() {
       queryKey: "paymentMethod",
       options: [
         { label: "Phương Thức Thanh Toán", value: "" },
-        { label: "Zalo Pay", value: "zlp" },
+        { label: "Zalo Pay", value: "zalopay" },
         { label: "Ví MoMo", value: "momo" },
         { label: "COD", value: "cod" },
       ],

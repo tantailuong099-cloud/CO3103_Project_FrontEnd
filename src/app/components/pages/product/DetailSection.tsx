@@ -5,16 +5,13 @@ import { useState } from "react";
 
 // Helper: convert YouTube URL -> embed URL
 function getYoutubeEmbedUrl(url: string): string | null {
+  if (!url || url.trim() === "" || url === ",") return null; // Thêm check chuỗi rác ","
   try {
     const u = new URL(url);
-
-    // youtu.be/VIDEO_ID
     if (u.hostname.includes("youtu.be")) {
       const id = u.pathname.replace("/", "");
       return id ? `https://www.youtube.com/embed/${id}` : null;
     }
-
-    // youtube.com/watch?v=VIDEO_ID
     if (
       u.hostname.includes("youtube.com") ||
       u.hostname.includes("www.youtube.com")
@@ -22,7 +19,6 @@ function getYoutubeEmbedUrl(url: string): string | null {
       const v = u.searchParams.get("v");
       if (v) return `https://www.youtube.com/embed/${v}`;
     }
-
     return null;
   } catch {
     return null;
@@ -32,6 +28,12 @@ function getYoutubeEmbedUrl(url: string): string | null {
 export default function DetailSection({ product }: { product: any }) {
   const [expanded, setExpanded] = useState(false);
 
+  // Fallback images để tránh lỗi src=""
+  const PLACEHOLDER = "/images/placeholder-game.png"; // Hãy đảm bảo có file này trong thư mục public
+  const mainImage =
+    product?.avatar || product?.productImage?.[0] || PLACEHOLDER;
+  const bgImage = product?.productImage?.[1] || mainImage; // Nếu không có ảnh thứ 2, dùng ảnh 1 hoặc avatar
+
   if (!product) {
     return (
       <section className="w-full bg-[#262626] text-white min-h-[50vh] grid place-items-center">
@@ -40,65 +42,33 @@ export default function DetailSection({ product }: { product: any }) {
     );
   }
 
-  // Build details table: chỉ push khi có value
   type DetailRow = { label: string; value: string };
   const details: DetailRow[] = [];
 
-  if (product.type) {
+  if (product.type)
     details.push({ label: "Genre", value: String(product.type) });
-  }
-
-  if (product.language) {
+  if (product.language)
     details.push({ label: "Platform", value: String(product.language) });
-  }
-
-  if (product.ageConstraints) {
-    details.push({
-      label: "ESRB",
-      value: `Ages ${product.ageConstraints}+`,
-    });
-  }
+  if (product.ageConstraints)
+    details.push({ label: "ESRB", value: `Ages ${product.ageConstraints}+` });
 
   if (product.releaseDate) {
     const year = new Date(product.releaseDate).getFullYear();
-    if (!Number.isNaN(year)) {
-      details.push({
-        label: "Year Production",
-        value: String(year),
-      });
-    }
+    if (!Number.isNaN(year))
+      details.push({ label: "Year Production", value: String(year) });
   }
 
-  if (product.manufactor) {
-    details.push({
-      label: "Manufacturer",
-      value: String(product.manufactor),
-    });
-  }
-
-  if (product.gameFileSize) {
-    details.push({
-      label: "Game file size",
-      value: String(product.gameFileSize),
-    });
-  }
-
+  if (product.manufactor)
+    details.push({ label: "Manufacturer", value: String(product.manufactor) });
   const players = product.playerNumber ?? product.minPlayer;
-  if (players) {
-    details.push({
-      label: "Players",
-      value: `Up to ${players} players`,
-    });
-  }
-
-  if (product.playmode) {
+  if (players)
+    details.push({ label: "Players", value: `Up to ${players} players` });
+  if (product.playmode)
     details.push({
       label: "Supported play modes",
       value: String(product.playmode),
     });
-  }
 
-  // description -> story
   const allParagraphs = product.description
     ? product.description.split("\n").filter((p: string) => p.trim() !== "")
     : [];
@@ -106,11 +76,7 @@ export default function DetailSection({ product }: { product: any }) {
   const storyParagraphs = allParagraphs.slice(0, 2);
   const moreStory = allParagraphs.slice(2);
 
-  // YouTube embed src từ videoLink
-  const embedUrl =
-    typeof product.videoLink === "string"
-      ? getYoutubeEmbedUrl(product.videoLink)
-      : null;
+  const embedUrl = getYoutubeEmbedUrl(product.videoLink);
 
   return (
     <section className="w-full bg-[#262626] text-white">
@@ -123,7 +89,6 @@ export default function DetailSection({ product }: { product: any }) {
 
       {/* Trailer + Table */}
       <div className="flex flex-col lg:flex-row justify-center items-start gap-6 md:gap-8 px-6 md:px-10 mb-12">
-        {/* Trailer: chỉ render nếu có embedUrl hợp lệ */}
         {embedUrl && (
           <div className="w-full lg:w-[480px] aspect-video rounded-md overflow-hidden shadow-md">
             <iframe
@@ -133,12 +98,11 @@ export default function DetailSection({ product }: { product: any }) {
               title={product.name || "Product trailer"}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
-              className="rounded-md"
+              className="rounded-md border-0"
             />
           </div>
         )}
 
-        {/* Details Table – chỉ render nếu có ít nhất 1 dòng */}
         {details.length > 0 && (
           <div className="w-full lg:w-[640px] border border-[#e8e7e7] rounded-md overflow-hidden">
             {details.map((d, i) => (
@@ -159,14 +123,12 @@ export default function DetailSection({ product }: { product: any }) {
       </div>
 
       {/* Story Section */}
-      <div className="relative w-full h-150 overflow-hidden rounded-lg">
-        {/* Background */}
+      <div className="relative w-full min-h-[500px] overflow-hidden rounded-lg">
+        {/* Background - FIX LỖI index [1] */}
         <div className="absolute inset-0">
           <Image
-            src={
-              product.productImage?.[1]            
-            }
-            alt="Story Section Background"
+            src={bgImage} // Sử dụng biến đã xử lý fallback
+            alt={`${product.name} background`}
             fill
             className="object-cover opacity-50"
           />
@@ -175,19 +137,19 @@ export default function DetailSection({ product }: { product: any }) {
 
         {/* Foreground */}
         <div className="relative z-10 flex flex-col items-center text-center px-6 md:px-10 py-10 md:py-12">
-          <Image
-            src={
-              product.productImage?.[0]            
-            }
-            alt="Silksong Logo"
-            width={560}
-            height={200}
-            className="object-contain mb-6 md:mb-8"
-          />
+          {/* Logo - FIX LỖI index [0] */}
+          <div className="relative w-full max-w-[560px] h-[200px] mb-6 md:mb-8">
+            <Image
+              src={mainImage} // Sử dụng biến đã xử lý fallback
+              alt={product.name}
+              fill
+              className="object-contain"
+            />
+          </div>
 
           {/* Story text */}
           <div className="max-w-3xl space-y-4 md:space-y-5 text-sm md:text-base leading-7 md:leading-8 text-[#eaeaea]">
-            {(storyParagraphs.length
+            {(storyParagraphs.length > 0
               ? storyParagraphs
               : ["No description available."]
             ).map((text: string, i: number) => (
@@ -200,11 +162,8 @@ export default function DetailSection({ product }: { product: any }) {
             <>
               <div
                 className={`max-w-3xl overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out ${
-                  expanded
-                    ? "max-h-[1000px] opacity-100"
-                    : "max-h-0 opacity-0"
+                  expanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
                 }`}
-                aria-hidden={!expanded}
               >
                 <div className="mt-4 md:mt-5 space-y-4 md:space-y-5 text-sm md:text-base leading-7 md:leading-8 text-[#eaeaea]">
                   {moreStory.map((text: string, i: number) => (
@@ -215,7 +174,6 @@ export default function DetailSection({ product }: { product: any }) {
 
               <button
                 onClick={() => setExpanded((v) => !v)}
-                aria-expanded={expanded}
                 className="mt-6 md:mt-8 flex items-center gap-2 text-white hover:text-[#fe8c31] transition"
               >
                 <span className="font-light text-sm md:text-base">

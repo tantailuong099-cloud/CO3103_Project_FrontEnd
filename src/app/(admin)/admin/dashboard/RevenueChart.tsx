@@ -14,21 +14,23 @@ export default function RevenueChart() {
   const chartRef = useRef<HTMLCanvasElement | null>(null);
   const chartInstanceRef = useRef<Chart | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [selectedMonth, setSelectedMonth] = useState("2025-12");
+  // Lấy tháng hiện tại làm mặc định (YYYY-MM)
+  const [selectedMonth, setSelectedMonth] = useState(
+    new Date().toISOString().slice(0, 7)
+  );
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         const res = await fetch("http://localhost:4000/api/order", {
           method: "GET",
-          credentials: "include", // <--- THÊM DÒNG NÀY
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
         });
 
         if (!res.ok) {
-          // Nếu 401/403 thì có thể redirect về login
           console.error("Unauthorized");
           return;
         }
@@ -44,34 +46,43 @@ export default function RevenueChart() {
     fetchOrders();
   }, []);
 
-  // ... (Phần logic xử lý biểu đồ giữ nguyên như câu trả lời trước) ...
-
-  // Để code ngắn gọn, tôi chỉ viết lại phần useEffect vẽ chart (đã bao gồm logic)
   useEffect(() => {
     const canvas = chartRef.current;
     if (!canvas || orders.length === 0) return;
 
     const getRevenueByDay = (monthYear: string) => {
+      const yearStr = monthYear.split("-")[0];
+      const monthStr = monthYear.split("-")[1];
+
       const daysInMonth = new Date(
-        parseInt(monthYear.split("-")[0]),
-        parseInt(monthYear.split("-")[1]),
+        parseInt(yearStr),
+        parseInt(monthStr),
         0
       ).getDate();
+
       const revenueArray = new Array(daysInMonth).fill(0);
 
       orders.forEach((order) => {
-        if (order.status === "cancelled") return;
+        // ✅ CHỈ LẤY NHỮNG ORDER CÓ STATUS LÀ PAID
+        if (order.status !== "paid") return;
+
         const orderDate = new Date(order.createdAt);
         const orderMonthYear = orderDate.toISOString().slice(0, 7);
+
         if (orderMonthYear === monthYear) {
           const day = orderDate.getDate();
-          revenueArray[day - 1] += order.totalPrice;
+          // Đảm bảo không vượt quá mảng (phòng trường hợp múi giờ nhảy ngày)
+          if (day <= daysInMonth) {
+            revenueArray[day - 1] += order.totalPrice;
+          }
         }
       });
       return revenueArray;
     };
 
     const currentMonthData = getRevenueByDay(selectedMonth);
+
+    // Tính toán tháng trước đó để so sánh
     const [year, month] = selectedMonth.split("-").map(Number);
     const prevDate = new Date(year, month - 2);
     const prevMonthString = prevDate.toISOString().slice(0, 7);
@@ -91,33 +102,54 @@ export default function RevenueChart() {
         labels: labels,
         datasets: [
           {
-            label: `Tháng ${selectedMonth}`,
+            label: `Doanh thu tháng ${selectedMonth}`,
             data: currentMonthData,
             borderColor: "#4379EE",
             backgroundColor: "rgba(67, 121, 238, 0.1)",
-            borderWidth: 2,
+            borderWidth: 3,
             tension: 0.4,
             fill: true,
+            pointRadius: 4,
+            pointBackgroundColor: "#4379EE",
           },
           {
-            label: `Tháng ${prevMonthString}`,
+            label: `Doanh thu tháng trước (${prevMonthString})`,
             data: prevMonthData,
-            borderColor: "#EF3826",
+            borderColor: "#A0A0A0",
             borderWidth: 2,
             borderDash: [5, 5],
             tension: 0.4,
             fill: false,
+            pointRadius: 0, // Ẩn điểm cho tháng trước để đỡ rối
           },
         ],
       },
       options: {
-        plugins: { legend: { position: "bottom" } },
+        responsive: true,
+        plugins: {
+          legend: { position: "bottom" },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                // Lấy giá trị y, nếu null thì mặc định là 0
+                const value = context.parsed.y ?? 0;
+                return `Doanh thu: $${value.toLocaleString()}`;
+              },
+            },
+          },
+        },
         scales: {
           x: {
-            title: { display: true, text: "Ngày" },
+            title: { display: true, text: "Ngày trong tháng" },
             grid: { display: false },
           },
-          y: { title: { display: true, text: "Doanh thu" }, beginAtZero: true },
+          y: {
+            title: { display: true, text: "Doanh thu ($)" },
+            beginAtZero: true,
+            ticks: {
+              callback: (value) => "$" + value.toLocaleString(),
+            },
+          },
         },
         maintainAspectRatio: false,
       },
@@ -131,18 +163,23 @@ export default function RevenueChart() {
   return (
     <div className="mt-8 bg-white rounded-xl shadow-md p-8">
       <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
-        <h2 className="font-bold text-[24px] text-gray-900">
-          Biểu đồ doanh thu
-        </h2>
+        <div>
+          <h2 className="font-bold text-[24px] text-gray-900">
+            Báo cáo Doanh thu Thực tế
+          </h2>
+          <p className="text-gray-500 text-sm">
+            Chỉ bao gồm các đơn hàng đã thanh toán thành công.
+          </p>
+        </div>
         <input
           type="month"
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value)}
-          className="h-9 border border-gray-300 rounded px-4 text-sm font-semibold w-[200px] cursor-pointer"
+          className="h-10 border border-gray-300 rounded-lg px-4 text-sm font-semibold w-[200px] cursor-pointer hover:border-blue-500 transition-colors"
         />
       </div>
-      <div className="h-[350px]">
-        <canvas id="revenue-chart" ref={chartRef}></canvas>
+      <div className="h-[400px]">
+        <canvas ref={chartRef}></canvas>
       </div>
     </div>
   );

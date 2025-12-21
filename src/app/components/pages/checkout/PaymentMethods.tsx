@@ -7,7 +7,7 @@ import { AddressFormValues } from "@/app/components/pages/checkout/AddressForm";
 const money = (n: number) =>
   `$${Math.max(0, n).toFixed(2).replace(/\.00$/, "")}`;
 
-type PaymentMethod = "MOMO" | "ZALOPAY";
+type PaymentMethod = "COD" | "ZALOPAY";
 
 export default function PaymentPanel({
   totals,
@@ -18,47 +18,68 @@ export default function PaymentPanel({
 }) {
   const [selected, setSelected] = useState<PaymentMethod>("MOMO");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleCheckout = async () => {
     try {
-      // ✅ SINGLE STRING VALIDATION
+      setLoading(true);
       if (!address?.address || address.address.trim() === "") {
         alert("⚠️ Please enter shipping address!");
+        setLoading(false);
+        return;
+      }
+
+      if (!selected) {
+        alert("⚠️ Please select a payment method before proceeding!");
+        setLoading(false);
         return;
       }
 
       const stored = localStorage.getItem("CHECKOUT_ITEMS");
       if (!stored) {
         alert("⚠️ No items selected for checkout!");
+        setLoading(false);
         return;
       }
 
-      const selectedItems = JSON.parse(stored) as {
-        id: string;
-        quantity: number;
-      }[];
-
-      const productIds = selectedItems.map((i) => i.id);
-
-      // ✅ ✅ SINGLE STRING SHIPPING ADDRESS
+      const selectedItems = JSON.parse(stored);
+      const productIds = selectedItems.map((i: any) => i.id);
       const shippingAddress = address.address;
 
-      console.log("📦 Shipping address sẽ gửi lên:", shippingAddress);
-
-      const res = await api.post("/api/order/checkout/partial", {
+      // BƯỚC 1: Tạo đơn hàng
+      const orderRes: any = await api.post("/api/order/checkout/partial", {
         productIds,
-        shippingAddress,          // ✅ STRING ONLY
-        paymentMethod: selected, // ✅ MOMO | ZALOPAY
+        shippingAddress,
+        paymentMethod: selected,
       });
 
-      console.log("✅ Checkout success:", res);
+      const orderId = orderRes._id;
 
-      localStorage.removeItem("CHECKOUT_ITEMS");
-      localStorage.removeItem("CHECKOUT_ADDRESS"); // ✅ clear temp address
-      setShowSuccess(true);
+      // BƯỚC 2: Xử lý theo phương thức
+      if (selected === "ZALOPAY") {
+        const paymentRes: any = await api.post("/api/payment/zalopay", {
+          orderId: orderId,
+        });
+
+        if (paymentRes.return_code === 1) {
+          localStorage.removeItem("CHECKOUT_ITEMS");
+          localStorage.removeItem("CHECKOUT_ADDRESS");
+          window.location.href = paymentRes.order_url;
+        } else {
+          alert("ZaloPay Error: " + paymentRes.return_message);
+        }
+      } else {
+        // ✅ NẾU LÀ THANH TOÁN SAU (COD)
+        console.log("✅ Order created with COD:", orderId);
+        localStorage.removeItem("CHECKOUT_ITEMS");
+        localStorage.removeItem("CHECKOUT_ADDRESS");
+        setShowSuccess(true); // Chỉ hiện Modal thành công, không redirect
+      }
     } catch (err: any) {
-      console.error("❌ Checkout error:", err?.message || err);
+      console.error("❌ Checkout error:", err);
       alert(`Checkout failed: ${err?.message || "Unknown error"}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -92,22 +113,26 @@ export default function PaymentPanel({
         <h3 className="text-white text-lg font-semibold">Payment Method</h3>
 
         <div className="space-y-3">
+          {/* ✅ NÚT THANH TOÁN SAU (COD) */}
           <button
             type="button"
-            onClick={() => setSelected("MOMO")}
+            onClick={() => setSelected("COD")}
             className={[
               baseBtn,
-              selected === "MOMO"
+              selected === "COD"
                 ? "border-[#fe8c31] ring-1 ring-[#fe8c31]/40"
                 : "border-[#3a3a3a]",
             ].join(" ")}
           >
-            <span className={leftWrap}>
-              <Image src="/icon/momo.svg" alt="MOMO" width={30} height={30} />
-              <span>Pay with MOMO Wallet</span>
+            <span className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
+                <Image src="/icon/cod.png" alt="COD" width={20} height={20} />
+              </div>
+              <span>Cash on Delivery / Pay Later</span>
             </span>
           </button>
 
+          {/* ZaloPay */}
           <button
             type="button"
             onClick={() => setSelected("ZALOPAY")}
@@ -118,18 +143,28 @@ export default function PaymentPanel({
                 : "border-[#3a3a3a]",
             ].join(" ")}
           >
-            <span className={leftWrap}>
-              <Image src="/icon/zalo.png" alt="ZaloPay" width={30} height={30} />
-              <span>Pay with ZaloPay</span>
+            <span className="flex items-center gap-3">
+              <Image
+                src="/icon/zalo.png"
+                alt="ZaloPay"
+                width={30}
+                height={30}
+              />
+              <span>ZaloPay Wallet</span>
             </span>
           </button>
         </div>
 
         <button
           onClick={handleCheckout}
-          className="bg-[#fe8c31] hover:bg-[#ff9d4f] transition text-white w-full py-3 rounded-[12px] font-medium text-center"
+          disabled={loading}
+          className="bg-[#fe8c31] hover:bg-[#ff9d4f] transition text-white w-full py-3 rounded-[12px] font-bold"
         >
-          Continue Payment
+          {loading
+            ? "Processing..."
+            : selected === "COD"
+            ? "Complete Order"
+            : "Pay with ZaloPay"}
         </button>
       </div>
 
