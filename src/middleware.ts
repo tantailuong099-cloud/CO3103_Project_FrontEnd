@@ -4,73 +4,86 @@ import type { NextRequest } from "next/server";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
-const PROTECTED_PATHS = ["/admin"];
+// Các trang Admin Public (không cần login)
 const PUBLIC_ADMIN_PATHS = ["/admin/login", "/admin/register"];
+// Các trang User Public (không cần login - thêm vào nếu cần chặn người đã login vào lại trang login)
+const PUBLIC_USER_PATHS = ["/login", "/register"];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // 1. Cho phép truy cập các trang public của admin (Login/Register)
-  if (PUBLIC_ADMIN_PATHS.includes(pathname)) {
+  // Bỏ qua các file tĩnh, hình ảnh, icon
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/static") ||
+    pathname.includes(".")
+  ) {
     return NextResponse.next();
   }
 
-  // 2. Nếu không phải đường dẫn bắt đầu bằng /admin thì bỏ qua (matcher đã lo việc này nhưng check thêm cho chắc)
-  if (!PROTECTED_PATHS.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next();
-  }
-
-  // 3. Kiểm tra Token trong Cookie
   const token = req.cookies.get("access_token")?.value;
+  const isAdminPath = pathname.startsWith("/admin");
+
+  // 1. TRƯỜNG HỢP KHÔNG CÓ TOKEN
   if (!token) {
-    const loginUrl = new URL("/admin/login", req.url);
-    return NextResponse.redirect(loginUrl);
+    // Nếu vào trang admin (mà không phải trang login/reg) -> Đẩy về admin login
+    if (isAdminPath && !PUBLIC_ADMIN_PATHS.includes(pathname)) {
+      return NextResponse.redirect(new URL("/admin/login", req.url));
+    }
+    // Các trang user khác cho phép đi tiếp
+    return NextResponse.next();
   }
 
+  // 2. TRƯỜNG HỢP CÓ TOKEN -> XÁC THỰC VAI TRÒ
   try {
-    // 4. Gọi API Verify để xác thực token và lấy thông tin user
     const res = await fetch(`${BACKEND_URL}/api/auth/verify`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         Cookie: `access_token=${token}`,
       },
-      // credentials: "include", // Dùng cái này nếu Backend check cookie của chính nó, nếu BE check header Cookie tự gửi thì có thể không cần.
     });
 
-    // 5. Nếu Token không hợp lệ hoặc hết hạn
     if (!res.ok) {
-      const loginUrl = new URL("/admin/login", req.url);
-      const response = NextResponse.redirect(loginUrl);
-      // Xóa cookie rác
+      // Token lỗi/hết hạn -> Xóa cookie và đẩy về trang login tương ứng
+      const response = NextResponse.redirect(
+        new URL(isAdminPath ? "/admin/login" : "/login", req.url)
+      );
       response.cookies.delete("access_token");
       return response;
     }
 
-    // 6. CHECK ROLE ADMIN (Phần thêm mới)
     const userData = await res.json();
+    const role = userData.role;
 
-    // Giả sử API verify trả về object user có trường "role".
-    // Kiểm tra xem role có phải là Admin không.
-    if (userData.role !== "Admin") {
-      // Nếu user đăng nhập rồi nhưng không phải Admin -> Đẩy về trang chủ (Client)
-      const homeUrl = new URL("/", req.url);
-      return NextResponse.redirect(homeUrl);
+    // --- LOGIC PHÂN QUYỀN NGHIÊM NGẶT ---
+
+    if (role === "Admin") {
+      // ADMIN:
+      // - Nếu đang ở trang không có /admin -> Bắt buộc đẩy vào /admin
+      // - Nếu đang ở trang /admin/login hoặc /admin/register -> Đẩy vào /admin (Dashboard)
+      if (!isAdminPath || PUBLIC_ADMIN_PATHS.includes(pathname)) {
+        return NextResponse.redirect(new URL("/admin", req.url)); // Giả sử /admin là Dashboard
+      }
+    } else if (role === "User") {
+      // USER:
+      // - Nếu cố tình vào bất cứ trang nào có /admin -> Đẩy về trang chủ /
+      // - Nếu đang ở trang /login hoặc /register -> Đẩy về trang chủ /
+      if (isAdminPath || PUBLIC_USER_PATHS.includes(pathname)) {
+        return NextResponse.redirect(new URL("/", req.url));
+      }
     }
 
-    // 7. Hợp lệ -> Cho đi tiếp
+    // Đúng vai trò đúng chỗ -> Cho đi tiếp
     return NextResponse.next();
   } catch (err) {
-    console.error("Middleware verify error:", err);
-    // Nếu lỗi mạng hoặc server die -> đẩy về login
-    const loginUrl = new URL("/admin/login", req.url);
-    const response = NextResponse.redirect(loginUrl);
-    response.cookies.delete("access_token");
-    return response;
+    console.error("Middleware Error:", err);
+    return NextResponse.next();
   }
 }
 
-// Áp dụng cho toàn bộ folder /admin
+// Matcher: Áp dụng cho toàn bộ ứng dụng để kiểm tra chéo các role
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
