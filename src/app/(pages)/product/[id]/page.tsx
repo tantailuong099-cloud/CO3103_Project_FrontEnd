@@ -101,7 +101,7 @@ export default function ProductDetailPage() {
         <DetailSection product={product} />
       </div>
 
-      <ProductSection title="FLASH SALE" variant="flash-sale" />
+      <ProductSection title="SAME CATEGORY" variant={product.category} />
     </main>
   );
 }

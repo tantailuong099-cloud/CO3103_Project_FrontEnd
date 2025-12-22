@@ -3,9 +3,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { api } from "@/app/services/api";
 import { AddressFormValues } from "@/app/components/pages/checkout/AddressForm";
-
-const money = (n: number) =>
-  `$${Math.max(0, n).toFixed(2).replace(/\.00$/, "")}`;
+import { formatVND } from "@/app/hook/money";
 
 type PaymentMethod = "COD" | "ZALOPAY";
 
@@ -94,17 +92,17 @@ export default function PaymentPanel({
         <div className="bg-[#1b1b1b] border border-[#2a2a2a] rounded-xl p-4 space-y-2">
           <div className="flex justify-between text-sm text-[#bdbdbd]">
             <span>Items total</span>
-            <span className="text-white">{money(totals.original)}</span>
+            <span className="text-white">{formatVND(totals.original)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-[#bdbdbd]">Discount</span>
-            <span className="text-[#7fe3a6]">−{money(totals.discount)}</span>
+            <span className="text-[#7fe3a6]">−{formatVND(totals.discount)}</span>
           </div>
           <div className="h-px bg-[#2a2a2a] my-2" />
           <div className="flex justify-between items-center">
             <span className="text-white font-semibold">Total to Pay</span>
             <span className="text-white text-2xl font-extrabold">
-              {money(totals.subtotal)}
+              {formatVND(totals.subtotal)}
             </span>
           </div>
         </div>

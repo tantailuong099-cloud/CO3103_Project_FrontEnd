@@ -2,7 +2,6 @@
 
 import Hero from "../components/pages/section/Hero";
 import ProductSection from "../components/pages/section/ProductSection";
-import { makeMockProducts } from "@/app/components/mockup/product";
 
 export default function Home() {
   return (
@@ -10,16 +9,18 @@ export default function Home() {
       <Hero />
 
       <ProductSection
-        title="FLASH SALE"
-        variant="flash-sale"
+        title="RECENTLY ADDED"
+        variant="added"
       />
 
       <ProductSection
-        title="TOP PICKS FOR YOU"
+        title="NEW RELEASED"
+        variant="released"
       />
 
       <ProductSection
         title="MOST POPULAR"
+        variant="popular"
       />
     </div>
   );

@@ -6,9 +6,12 @@ import BuyOption from "./BuyOption";
 export default function BuySection({ product }: { product: any }) {
   // ✅ Gộp avatar và mảng productImage lại để gallery đầy đủ nhất
   // Lọc bỏ các giá trị null/undefined hoặc chuỗi rỗng
-  const allImages = [product?.avatar, ...(product?.productImage || [])].filter(
-    (img) => img && typeof img === "string" && img.trim() !== ""
-  );
+ const allImages = (product?.productImage || [])
+    .slice(1) // 👈 lấy từ index 1 trở đi
+    .filter(
+      (img) => img && typeof img === "string" && img.trim() !== ""
+    );
+  
 
   return (
     <>

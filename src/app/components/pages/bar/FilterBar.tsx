@@ -4,7 +4,7 @@ import React from "react";
 import { FaFilter, FaRotateLeft } from "react-icons/fa6";
 import { useQueryFilters } from "@/app/hook/useQueryFilters";
 
-export type FilterType = "select" | "date-range";
+export type FilterType = "select" | "number";
 
 export interface BaseFilter {
   type: FilterType;
@@ -17,13 +17,15 @@ export interface SelectFilter extends BaseFilter {
   defaultValue?: string;
 }
 
-export interface DateRangeFilter extends BaseFilter {
-  type: "date-range";
-  queryKeyFrom: string;
-  queryKeyTo: string;
+export interface NumberFilter extends BaseFilter {
+  type: "number";
+  queryKey: string;
+  placeholder?: string;
+  min?: number;
 }
 
-export type FilterItem = SelectFilter | DateRangeFilter;
+
+export type FilterItem = SelectFilter | NumberFilter;
 
 interface ClientFilterSectionProps {
   filters: FilterItem[];
@@ -38,9 +40,8 @@ const ClientFilterSection: React.FC<ClientFilterSectionProps> = ({
     const updates: Record<string, null> = {};
     filters.forEach((f) => {
       if (f.type === "select") updates[f.queryKey] = null;
-      if (f.type === "date-range") {
-        updates[f.queryKeyFrom] = null;
-        updates[f.queryKeyTo] = null;
+      if (f.type === "number") {
+        updates[f.queryKey] = null;
       }
     });
     setFilters(updates);
@@ -82,28 +83,20 @@ const ClientFilterSection: React.FC<ClientFilterSectionProps> = ({
               </select>
             )}
 
-            {/* DATE RANGE */}
-            {filter.type === "date-range" && (
-              <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  value={getFilter(filter.queryKeyFrom)}
-                  onChange={(e) =>
-                    setFilters({ [filter.queryKeyFrom]: e.target.value })
-                  }
-                  className="bg-black text-white outline-none text-sm cursor-pointer"
-                />
-                <span className="text-white">-</span>
-                <input
-                  type="date"
-                  value={getFilter(filter.queryKeyTo)}
-                  onChange={(e) =>
-                    setFilters({ [filter.queryKeyTo]: e.target.value })
-                  }
-                  className="bg-black text-white outline-none text-sm cursor-pointer"
-                />
-              </div>
+            {filter.type === "number" && (
+              <input
+                type="number"
+                min={filter.min}
+                placeholder={filter.placeholder}
+                value={getFilter(filter.queryKey) || ""}
+                onChange={(e) =>
+                  setFilters({ [filter.queryKey]: e.target.value || null })
+                }
+                className="w-28 bg-black text-white outline-none text-sm font-semibold placeholder-gray-400"
+              />
             )}
+
+
           </div>
         ))}
 

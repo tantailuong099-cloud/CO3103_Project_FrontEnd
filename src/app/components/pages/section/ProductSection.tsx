@@ -17,12 +17,12 @@ interface Product {
 
 interface ProductSectionProps {
   title: string;
-  variant?: "flash-sale" | "default";
+  variant?: "released" | "added" | "popular" | string;
 }
 
 export default function ProductSection({
   title,
-  variant = "default",
+  variant = "popular",
 }: ProductSectionProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -43,21 +43,49 @@ export default function ProductSection({
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
   
-    useEffect(() => {
-        const fetchData = async () => {
-          try {
-            setLoading(true);
-            const data = await api.get(`/api/product`);
-            setProducts(data as any[]);
-          } catch (error) {
-            console.error("Error loading products:", error);
-          } finally {
-            setLoading(false);
-          }
-        };
 
-        fetchData();
-      }, []); 
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      let rawData: any[] = [];
+
+      switch (variant) {
+        case "popular":
+          rawData = await api.get("/api/order/most-bought/10");
+          console.log("MOST BOUGHT RAW:", rawData);
+
+          break;
+        case "released":
+          rawData = await api.get("/api/product/earliest/10");
+          break;
+
+        case "added":
+          rawData = await api.get("/api/product/latest/10");
+          break;
+
+        default:
+          rawData = await api.get(`/api/categories/product/${variant}`);
+      }
+
+      // ✅ normalize data HERE
+      const normalized =
+        variant === "popular"
+          ? rawData.map((i) => i.product) // backend lookup product
+           .filter(Boolean)  
+          : rawData;
+
+      setProducts(normalized);
+    } catch (error) {
+      console.error("Error loading products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, [variant]);
+
 
 
   return (
@@ -67,11 +95,7 @@ export default function ProductSection({
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div
-              className={`bg-gradient-to-r ${
-                variant === "flash-sale"
-                  ? "from-[#FF6B35] to-[#ff3b3b]"
-                  : "from-[#FF6B35] to-[#ff7e4d]"
-              } px-4 py-2 rounded`}
+              className={`bg-gradient-to-r from-[#FF6B35] to-[#ff3b3b] px-4 py-2 rounded`}
             >
               <h2 className="text-white text-lg md:text-xl font-bold uppercase">
                 {title}

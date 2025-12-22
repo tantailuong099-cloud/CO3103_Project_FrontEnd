@@ -3,6 +3,8 @@ import { api } from "./api";
 export type User = {
   userId: string;
   email: string;
+  avatar?: string;
+  name: string;
 };
 
 export async function register(data: {
@@ -12,77 +14,29 @@ export async function register(data: {
   phoneNumber?: string;
   address?: string;
 }): Promise<void> {
-  await api.post("/api/auth/register", data, { Credential: "include" });
+  await api.post<void>("/api/auth/register", data);
 }
 
 export async function login(email: string, password: string): Promise<void> {
-  await api.post(
-    "/api/auth/login",
-    { email, password },
-    { Credential: "include" }
-  );
+  await api.post<void>("/api/auth/login", { email, password });
 }
 
 export async function logout(): Promise<void> {
-  await api.post("/api/auth/logout", null, {
-    Credential: "include",
-  });
+  await api.post<void>("/api/auth/logout");
 }
 
 export async function getMe(): Promise<User> {
-  const res = await api.get<User>("/api/auth/profile", {
-    Credential: "include",
-  });
-
-  return res;
+  return await api.get<User>("/api/auth/profile");
 }
 
 export const forgotPassword = async (email: string) => {
-  const res = await fetch(
-    `http://localhost:4000/api/auth/forgot-password`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    }
-  );
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.message || "Không thể gửi OTP");
-  }
-  return res.json();
+  return await api.post("/api/auth/forgot-password", { email });
 };
 
 export const verifyOtp = async (email: string, otp: string) => {
-  const res = await fetch(
-    `http://localhost:4000/api/auth/verify-otp`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, otp }),
-      credentials: "include",
-    }
-  );
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.message || "Mã OTP không chính xác");
-  }
-  return res.json(); // NestJS sẽ set cookie access_token tại đây
+  return await api.post("/api/auth/verify-otp", { email, otp });
 };
 
 export const resetPassword = async (password: string) => {
-  const res = await fetch(
-    `http://localhost:4000/api/auth/reset-password`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
-      credentials: "include",
-    }
-  );
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.message || "Không thể đổi mật khẩu");
-  }
-  return res.json();
+  return await api.post("/api/auth/reset-password", { password });
 };

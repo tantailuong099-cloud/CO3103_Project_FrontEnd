@@ -30,8 +30,7 @@ export default function DetailSection({ product }: { product: any }) {
 
   // Fallback images để tránh lỗi src=""
   const PLACEHOLDER = "/images/placeholder-game.png"; // Hãy đảm bảo có file này trong thư mục public
-  const mainImage =
-    product?.avatar || product?.productImage?.[0] || PLACEHOLDER;
+  const mainImage = product?.productImage?.[0] || PLACEHOLDER;
   const bgImage = product?.productImage?.[1] || mainImage; // Nếu không có ảnh thứ 2, dùng ảnh 1 hoặc avatar
 
   if (!product) {
@@ -86,6 +85,7 @@ export default function DetailSection({ product }: { product: any }) {
           PRODUCT DETAILS
         </p>
       </div>
+      
 
       {/* Trailer + Table */}
       <div className="flex flex-col lg:flex-row justify-center items-start gap-6 md:gap-8 px-6 md:px-10 mb-12">

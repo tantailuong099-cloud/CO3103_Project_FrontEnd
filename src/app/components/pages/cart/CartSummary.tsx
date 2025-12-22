@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import type { CartItem } from "./CartItem";
+import { formatVND } from "@/app/hook/money";
 
 const nf = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
 const money = (n: number) => nf.format(Math.max(0, n));
@@ -24,7 +25,7 @@ export default function CartSummary({ digitalSubtotal, physicalSubtotal, selecte
   };
 
   const itemsSubtotal = digitalSubtotal + physicalSubtotal;
-  const arcDiscount = itemsSubtotal >= 200 ? 10 : 0;
+  const arcDiscount = 0;
   const total = Math.max(0, itemsSubtotal - arcDiscount);
 
   return (
@@ -36,11 +37,11 @@ export default function CartSummary({ digitalSubtotal, physicalSubtotal, selecte
       <div className="space-y-2 text-sm text-neutral-700">
         <div className="flex justify-between">
           <span>Digital items Subtotal</span>
-          <span className="font-medium text-neutral-900">{money(digitalSubtotal)}</span>
+          <span className="font-medium text-neutral-900">{formatVND(digitalSubtotal)}</span>
         </div>
         <div className="flex justify-between">
           <span>Physical items Subtotal</span>
-          <span className="font-medium text-neutral-900">{money(physicalSubtotal)}</span>
+          <span className="font-medium text-neutral-900">{formatVND(physicalSubtotal)}</span>
         </div>
       </div>
 
@@ -48,7 +49,7 @@ export default function CartSummary({ digitalSubtotal, physicalSubtotal, selecte
         <div className="flex justify-between">
           <span>ARC Discount</span>
           <span className="font-medium text-neutral-900">
-            {arcDiscount > 0 ? `-${money(arcDiscount)}` : money(0)}
+            {arcDiscount > 0 ? `-${formatVND(arcDiscount)}` : formatVND(0)}
           </span>
         </div>
       </div>
@@ -56,7 +57,7 @@ export default function CartSummary({ digitalSubtotal, physicalSubtotal, selecte
       <div className="mt-3 pt-3 border-t border-[#e5e5e5]">
         <div className="flex justify-between items-center">
           <span className="text-base font-semibold">Total</span>
-          <span className="text-xl font-bold text-neutral-900">{money(total)}</span>
+          <span className="text-xl font-bold text-neutral-900">{formatVND(total)}</span>
         </div>
       </div>
 

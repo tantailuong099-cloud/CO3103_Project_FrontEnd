@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { formatVND } from "@/app/hook/money";
 
 export type OrderItem = {
   id: number;
@@ -14,8 +15,7 @@ export type OrderItem = {
   isDigital: boolean;
 };
 
-const money = (n: number) =>
-  `$${Math.max(0, n).toFixed(2).replace(/\.00$/, "")}`;
+
 
 export default function OrderItemRow({ item }: { item: OrderItem }) {
   const finalUnit = Math.max(0, item.price - (item.discount ?? 0));
@@ -56,15 +56,15 @@ export default function OrderItemRow({ item }: { item: OrderItem }) {
             {item.discount ? (
               <>
                 <span className="text-[#bababa] line-through text-sm">
-                  {money(item.price)}
+                  {formatVND(item.price)}
                 </span>
                 <span className="text-white text-base font-semibold">
-                  {money(finalUnit)}
+                  {formatVND(finalUnit)}
                 </span>
               </>
             ) : (
               <span className="text-white text-base font-semibold">
-                {money(item.price)}
+                {formatVND(item.price)}
               </span>
             )}
           </div>
@@ -77,15 +77,15 @@ export default function OrderItemRow({ item }: { item: OrderItem }) {
             {item.discount ? (
               <>
                 <span className="text-[#bababa] line-through text-sm">
-                  {money(item.price)}
+                  {formatVND(item.price)}
                 </span>
                 <span className="text-white text-lg font-semibold">
-                  {money(finalUnit)}
+                  {formatVND(finalUnit)}
                 </span>
               </>
             ) : (
               <span className="text-white text-lg font-semibold">
-                {money(item.price)}
+                {formatVND(item.price)}
               </span>
             )}
           </div>
@@ -99,7 +99,7 @@ export default function OrderItemRow({ item }: { item: OrderItem }) {
           <div className="mt-1 flex items-center gap-2">
             <span className="text-[#bababa] text-sm">Subtotal:</span>
             <span className="text-white text-lg font-semibold">
-              {money(subtotal)}
+              {formatVND(subtotal)}
             </span>
           </div>
         </div>

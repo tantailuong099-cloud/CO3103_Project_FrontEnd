@@ -5,10 +5,8 @@ import { useState } from "react";
 import { api } from "@/app/services/api";
 import { useRouter } from "next/navigation";
 import { getMe } from "@/app/services/auth";
+import { formatVND } from "@/app/hook/money";
 
-const toNum = (v: number | string | null | undefined) =>
-  v == null ? NaN : parseFloat(String(v).replace(/[^0-9.]/g, ""));
-const fmt = (n: number) => `$${Math.max(0, n).toFixed(2).replace(/\.00$/, "")}`;
 
 export default function BuyOption({ product }: { product: any }) {
   const router = useRouter(); 
@@ -20,7 +18,9 @@ export default function BuyOption({ product }: { product: any }) {
     version,
     categoryName,        // string: "action"
     metacriticScore,
+    metacriticURL,
     ignScore,
+    ignURL,
     releaseDate,
     ageConstraints,
     productImage = [],
@@ -29,8 +29,6 @@ export default function BuyOption({ product }: { product: any }) {
     videoLink
   } = product;
 
-  const base = toNum(price);
-  const finalPrice = base;
 
   const [qty, setQty] = useState(1);
 
@@ -79,22 +77,18 @@ export default function BuyOption({ product }: { product: any }) {
         <OutlineChip
           label="Metacritic:"
           value={metacriticScore ? metacriticScore.toFixed(1) : "N/A"}
+          href={metacriticURL}
         />
         <OutlineChip
           label="IGN:"
           value={ignScore ? ignScore.toFixed(1) : "N/A"}
+          href={ignURL}
         />
+
       </div>
 
-      {/* Rating */}
-      <div className="mt-4 flex items-center gap-5">
-        <RatingStars rating={metacriticScore} reviews={288} />
-        <div className="h-4 w-px bg-gray-600" />
-        <button className="text-[#bababa] text-sm hover:text-white transition">
-          View ratings
-        </button>
-      </div>
-
+     
+  
       {/* Genre */}
       <Row label="Genre">
         <span className="text-white text-sm capitalize">{categoryName}</span>
@@ -125,7 +119,7 @@ export default function BuyOption({ product }: { product: any }) {
 
       {/* PRICE */}
       <div className="mt-6 flex items-end gap-3">
-        <p className="text-2xl font-bold text-white">{fmt(finalPrice)}</p>
+        <p className="text-2xl font-bold text-white">{formatVND (price)}</p>
       </div>
 
       {/* Quantity + Add to Cart */}
@@ -158,13 +152,39 @@ function Chip({ text, color = "default" }: { text: string; color?: "default" | "
   return <span className={`px-3 py-1 rounded-[15px] text-sm ${cls}`}>{text}</span>;
 }
 
-function OutlineChip({ label, value }: { label: string; value: string }) {
+function OutlineChip({
+  label,
+  value,
+  href,
+}: {
+  label: string;
+  value: string;
+  href?: string;
+}) {
+  const baseCls =
+    "px-3 py-1 rounded-[15px] text-sm border-2 border-[#fe8c31] text-[#fe8c31] transition";
+
+  if (!href) {
+    return (
+      <span className={baseCls}>
+        <span className="font-semibold">{label}</span> {value}
+      </span>
+    );
+  }
+
   return (
-    <span className="px-3 py-1 rounded-[15px] text-sm border-2 border-[#fe8c31] text-[#fe8c31]">
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`${baseCls} hover:bg-[#fe8c31] hover:text-black cursor-pointer`}
+      title={`View on ${label.replace(":", "")}`}
+    >
       <span className="font-semibold">{label}</span> {value}
-    </span>
+    </a>
   );
 }
+
 
 function Pill({ children }: { children: React.ReactNode }) {
   return (

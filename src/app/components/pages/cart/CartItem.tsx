@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { formatVND } from "@/app/hook/money";
 
 export type CartItem = {
   id: string;              // product._id
@@ -76,7 +77,7 @@ export default function CartItemRow({ item, onToggle, onQty, onDelete }: CartIte
 
           {/* Price small (mobile) */}
           <div className="mt-2 flex gap-2 items-end lg:hidden">
-            <span className="text-white text-base font-semibold">{money(item.price)}</span>
+            <span className="text-white text-base font-semibold">{formatVND(item.price)}</span>
           </div>
         </div>
 
@@ -84,7 +85,7 @@ export default function CartItemRow({ item, onToggle, onQty, onDelete }: CartIte
         <div className="flex flex-col items-end gap-2 shrink-0">
           {/* Price big (desktop) */}
           <div className="hidden lg:flex items-baseline gap-2">
-            <span className="text-white text-lg font-semibold">{money(item.price)}</span>
+            <span className="text-white text-lg font-semibold">{formatVND(item.price)}</span>
           </div>
 
           {/* Qty */}
@@ -121,7 +122,7 @@ export default function CartItemRow({ item, onToggle, onQty, onDelete }: CartIte
           {/* Subtotal */}
           <div className="mt-1 flex items-center gap-2">
             <span className="text-[#bababa] text-sm">Subtotal:</span>
-            <span className="text-white text-lg font-semibold">{money(rowSubtotal)}</span>
+            <span className="text-white text-lg font-semibold">{formatVND(rowSubtotal)}</span>
           </div>
         </div>
       </div>

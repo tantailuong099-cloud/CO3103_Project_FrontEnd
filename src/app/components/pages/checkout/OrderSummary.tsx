@@ -1,7 +1,7 @@
 import Image from "next/image";
 import type { CartItem } from "../cart/CartItem";
-const money = (n: number) =>
-  `$${Math.max(0, n).toFixed(2).replace(/\.00$/, "")}`;
+import { formatVND } from "@/app/hook/money";
+
 
 export default function OrderItemsPanel({ items }: { items: CartItem[] }) {
   return (
@@ -52,7 +52,7 @@ export default function OrderItemsPanel({ items }: { items: CartItem[] }) {
                 <div className="flex flex-col items-end shrink-0 gap-1">
                   {
                     <span className="text-white text-lg font-semibold">
-                      {money(item.price)}
+                      {formatVND(item.price)}
                     </span>
                   }
 
@@ -66,7 +66,7 @@ export default function OrderItemsPanel({ items }: { items: CartItem[] }) {
                   <div className="mt-1 flex items-center gap-2">
                     <span className="text-[#bababa] text-sm">Subtotal:</span>
                     <span className="text-white text-lg font-semibold">
-                      {money(rowSubtotal)}
+                      {formatVND(rowSubtotal)}
                     </span>
                   </div>
                 </div>

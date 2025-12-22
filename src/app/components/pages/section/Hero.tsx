@@ -2,8 +2,18 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 const FALLBACK_IMAGE = "/no-image.png";
+const toNumber = (v: number | string | null | undefined) =>
+  v == null ? NaN : Number(String(v).replace(/[^\d.-]/g, ""));
+
+const fmtVND = (v: number) =>
+  new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  }).format(Math.max(0, v));
 
 export type HeroProduct = {
   _id: string;
@@ -22,7 +32,7 @@ export default function Hero() {
   const [slides, setSlides] = useState<HeroProduct[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
-
+  const router = useRouter();
   const mapToHeroProduct = (p: any): HeroProduct => {
     const images = p.productImage ?? [];
 
@@ -58,7 +68,7 @@ export default function Hero() {
   useEffect(() => {
     const fetchLatest = async () => {
       try {
-        const res = await fetch("http://localhost:4000/api/product/latest", {
+        const res = await fetch("http://localhost:4000/api/product/latest/5", {
           cache: "no-store",
         });
 
@@ -99,21 +109,21 @@ export default function Hero() {
   const currentGame = slides[currentSlide];
 
   return (
-    <section className="relative w-full h-[500px] md:h-[600px] lg:h-[680px] overflow-hidden">
+    <section className="relative w-full h-[500px] md:h-[600px] lg:h-[680px] overflow-hidden" >
       {/* Background Image (uses image 3) */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0" >
         <Image
           src={currentGame.thumbnail || FALLBACK_IMAGE}
           alt={currentGame.title}
           fill
-          className="w-full h-full object-contain bg-black p-1"
+          className="object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
       </div>
 
       <div className="relative h-full px-6 lg:px-12">
         <div className="flex flex-col justify-between h-full py-8">
-          <div className="flex flex-col justify-center flex-1 max-w-2xl">
+          <div className="flex flex-col justify-center flex-1 max-w-2xl" onClick={() => router.push(`/product/${currentGame._id}`)}>
             {/* Logo (uses image 1) */}
             {currentGame.logo && (
               <div className="mb-4">
@@ -134,7 +144,7 @@ export default function Hero() {
             <div className="flex flex-wrap items-center gap-2 mb-3">
               {currentGame.rating && (
                 <span className="px-3 py-1 bg-[#FF6B35] text-white text-xs font-semibold rounded">
-                  Rating: {currentGame.rating}
+                  MetaCritic: {currentGame.rating}
                 </span>
               )}
 
@@ -163,11 +173,14 @@ export default function Hero() {
                   {tag}
                 </span>
               ))}
-              {currentGame.price && (
+              {currentGame.price != null && (
                 <span className="px-3 py-1 bg-[#ff3b3b] text-white text-xs font-semibold rounded">
-                  ${currentGame.price}
+                  {Number.isFinite(toNumber(currentGame.price))
+                    ? fmtVND(toNumber(currentGame.price))
+                    : String(currentGame.price)}
                 </span>
               )}
+
             </div>
 
             <p className="text-gray-200 text-sm md:text-base leading-relaxed line-clamp-4">

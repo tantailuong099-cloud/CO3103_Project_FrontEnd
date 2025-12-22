@@ -16,15 +16,33 @@ export default function SearchPage() {
 
   const categoryId = params.get("categoryId");
   const categoryName = params.get("categoryName");
+  const q = params.get("q");
   const type = params.get("type");
   const platform = params.get("platform");
-
+  const playerMin = params.get("playerMin");
+  const [categories, setCategories] = useState<
+    { _id: string; name: string; description: string }[]
+  >([]);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+
+   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get<
+          { _id: string; name: string; description: string }[]
+        >("/api/categories");
+        setCategories(res);
+      } catch (error) {
+        console.error("❌ Lỗi khi lấy danh mục:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   // sort
   const [sortBy, setSortBy] = useState<SortValue>("relevant");
@@ -33,23 +51,31 @@ export default function SearchPage() {
   const clientFilters = [
     {
       type: "select",
-      queryKey: "typeFilter",
+      queryKey: "type",
       options: [
-        { label: "Phân Loại", value: "" },
+        { label: "Type", value: "" },
         { label: "Digital", value: "digital" },
         { label: "Physical", value: "physical" },
       ],
     },
     {
       type: "select",
-      queryKey: "categoryFilter",
+      queryKey: "categoryId",
       options: [
-        { label: "Danh Mục", value: "" },
-        { label: "Action", value: "action" },
-        { label: "RPG", value: "rpg" },
-        { label: "Adventure", value: "adventure" },
+        { label: "Category", value: "" },
+        ...categories.map((c) => ({
+          label: c.name,
+          value: c._id, // 🔥 dùng ID thật
+        })),
       ],
     },
+    {
+        type: "number",
+        queryKey: "playerMin",
+        placeholder: "Min player",
+        min: 1,
+      },
+
   ];
 
   // ✅ FETCH DATA
@@ -57,22 +83,20 @@ export default function SearchPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        let data: any[] = [];
 
-        if (type) data = (await api.get(`/api/product/type/${type}`)) as any[];
-        if (categoryId)
-          data = (await api.get(`/api/categories/product/${categoryId}`)) as any[];
-        if (platform)
-          data = (await api.get(`/api/product/platform/${platform}`)) as any[];
+        const query = new URLSearchParams();
+        if (q) query.set("q", q);
+        if (type) query.set("type", type);
+        if (categoryId) query.set("categoryId", categoryId);
+        if (platform) query.set("platform", platform);
+        if (playerMin) query.set("playerMin", playerMin);
 
-        if (!categoryId && !type && !platform) {
-          data = (await api.get(`/api/product`)) as any[];
-        }
+        const data = await api.get(`/api/product?${query.toString()}`);
 
         setProducts(data);
         setCurrentPage(1);
-      } catch (error) {
-        console.error("❌ Error loading products:", error);
+      } catch (err) {
+        console.error(err);
         setProducts([]);
       } finally {
         setLoading(false);
@@ -80,7 +104,8 @@ export default function SearchPage() {
     };
 
     fetchData();
-  }, [categoryId, type, platform]);
+  }, [type, categoryId, platform, playerMin]);
+
 
   // ✅ APPLY CLIENT FILTERS (CHỈ TYPE + CATEGORY)
   const filteredProducts = useMemo(() => {
@@ -143,21 +168,15 @@ export default function SearchPage() {
     <main className="p-10 text-white">
       <div className="flex justify-between mb-4">
         <h1 className="text-2xl">
-          {type
-            ? `Type: ${type}`
-            : categoryName
-            ? `Category: ${categoryName}`
-            : "Search"}
+          Search
         </h1>
       </div>
 
-      {/* ✅ CLIENT FILTER + SORT */}
       <div className="flex items-center justify-between mb-8">
         <ClientFilterSection filters={clientFilters as any} />
         <SortedBy value={sortBy} onChange={setSortBy} />
       </div>
 
-      {/* ✅ CONTENT */}
       {loading ? (
         <p>Loading...</p>
       ) : currentProducts.length === 0 ? (
