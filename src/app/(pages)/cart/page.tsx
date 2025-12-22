@@ -99,6 +99,9 @@ export default function CartPage() {
       load(); // rollback
     }
   };
+  const showDigital = viewFilter === "All" || viewFilter === "Digital";
+  const showPhysical = viewFilter === "All" || viewFilter === "Physical";
+
 
   return (
     <main className="min-h-screen bg-[#262626] text-white">
@@ -181,34 +184,54 @@ export default function CartPage() {
           {!loading && (
             <>
               {/* Digital */}
-              <SectionHeader
-                title={`DIGITAL ITEM (${digital.length})`}
-                accent
-                checked={allSelected(digital)}
-                onToggle={(v) => selectAll(true, v)}
-              />
-              <div className="mt-3 space-y-4">
-                {digital.map((it) => (
-                  <CartItemRow key={it.id} item={it} onToggle={toggleItem} onQty={setQty} onDelete={del} />
-                ))}
-                {digital.length === 0 && <EmptyHint text="No digital items." />}
-              </div>
+              {showDigital && (
+                <>
+                  <SectionHeader
+                    title={`DIGITAL ITEM (${digital.length})`}
+                    accent
+                    checked={allSelected(digital)}
+                    onToggle={(v) => selectAll(true, v)}
+                  />
+                  <div className="mt-3 space-y-4">
+                    {digital.map((it) => (
+                      <CartItemRow
+                        key={it.id}
+                        item={it}
+                        onToggle={toggleItem}
+                        onQty={setQty}
+                        onDelete={del}
+                      />
+                    ))}
+                    {digital.length === 0 && <EmptyHint text="No digital items." />}
+                  </div>
+                </>
+              )}
+
 
               {/* Physical */}
-              <SectionHeader
-                className="mt-10"
-                title={`PHYSICAL ITEM (${items.filter((i) => !i.isDigital).length})`}
-                checked={allSelected(items.filter((i) => !i.isDigital))}
-                onToggle={(v) => selectAll(false, v)}
-              />
-              <div className="mt-3 space-y-4">
-                {items
-                  .filter((i) => !i.isDigital)
-                  .map((it) => (
-                    <CartItemRow key={it.id} item={it} onToggle={toggleItem} onQty={setQty} onDelete={del} />
-                  ))}
-                {items.filter((i) => !i.isDigital).length === 0 && <EmptyHint text="No physical items." />}
-              </div>
+              {showPhysical && (
+                <>
+                  <SectionHeader
+                    className="mt-10"
+                    title={`PHYSICAL ITEM (${physical.length})`}
+                    checked={allSelected(physical)}
+                    onToggle={(v) => selectAll(false, v)}
+                  />
+                  <div className="mt-3 space-y-4">
+                    {physical.map((it) => (
+                      <CartItemRow
+                        key={it.id}
+                        item={it}
+                        onToggle={toggleItem}
+                        onQty={setQty}
+                        onDelete={del}
+                      />
+                    ))}
+                    {physical.length === 0 && <EmptyHint text="No physical items." />}
+                  </div>
+                </>
+              )}
+
             </>
           )}
         </div>

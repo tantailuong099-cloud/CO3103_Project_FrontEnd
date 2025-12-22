@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import OrderHistoryCard from "@/app/components/pages/order/OrderHistoryCard";
 import OrderHistoryDetailPanel from "@/app/components/pages/order/OrderHistoryPanel";
 import { api } from "@/app/services/api";
+import { formatVND } from "@/app/hook/money";
+
 type OrderStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
 type OrderDTO = {
   _id: string;

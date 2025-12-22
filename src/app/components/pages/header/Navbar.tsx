@@ -145,7 +145,7 @@ export default function Navbar() {
   };
   const handleSearch = () => {
     if (!q.trim()) return;
-    router.push(`/search?q=${encodeURIComponent(q)}`);
+    router.replace(`/search?q=${encodeURIComponent(q)}`);
   };
 
 
@@ -169,8 +169,9 @@ export default function Navbar() {
                 onChange={(e) => setQ(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 placeholder="Search..."
+                className="flex-1 bg-transparent text-sm outline-none"
               />
-              <button onClick={handleSearch}>
+              <button onClick={handleSearch} className="px-2">
                 <IconSearch className="h-4 w-4" />
               </button>
             </div>

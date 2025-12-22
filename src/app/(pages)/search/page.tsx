@@ -104,7 +104,7 @@ export default function SearchPage() {
     };
 
     fetchData();
-  }, [type, categoryId, platform, playerMin]);
+  }, [q, type, categoryId, platform, playerMin]);
 
 
   // ✅ APPLY CLIENT FILTERS (CHỈ TYPE + CATEGORY)

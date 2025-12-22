@@ -4,9 +4,8 @@ import Image from "next/image";
 import { OrderItemView } from "./order-view.type";
 import { api } from "@/app/services/api";
 import { useState } from "react";
+import { formatVND } from "@/app/hook/money";
 
-const money = (n: number) =>
-  `$${Math.max(0, n).toFixed(2).replace(/\.00$/, "")}`;
 
 export default function OrderHistoryDetailPanel({
   orderId,
@@ -56,7 +55,7 @@ export default function OrderHistoryDetailPanel({
   const handleCancel = async () => {
     const confirmMsg =
       status === "paid"
-        ? `This order is paid. If you cancel, ${money(
+        ? `This order is paid. If you cancel, ${formatVND(
             totals
           )} will be refunded to your account. Proceed?`
         : "Are you sure you want to cancel this order?";
@@ -70,7 +69,7 @@ export default function OrderHistoryDetailPanel({
       // Thông báo đặc biệt nếu đã thanh toán
       if (status === "paid") {
         alert(
-          `✅ Order cancelled. Refund of ${money(
+          `✅ Order cancelled. Refund of ${formatVND(
             totals
           )} has been processed to your wallet.`
         );
@@ -131,11 +130,11 @@ export default function OrderHistoryDetailPanel({
                   {it.title}
                 </p>
                 <p className="text-[#9d9d9d] text-xs">
-                  Qty: {it.quantity} • {money(finalUnit)}
+                  Qty: {it.quantity} • {formatVND(finalUnit)}
                 </p>
               </div>
               <p className="text-white font-semibold text-sm">
-                {money(finalUnit * it.quantity)}
+                {formatVND(finalUnit * it.quantity)}
               </p>
             </div>
           );
@@ -145,7 +144,7 @@ export default function OrderHistoryDetailPanel({
       {/* Total */}
       <div className="pt-3 border-t border-[#2a2a2a] flex justify-between items-center">
         <span className="text-[#bdbdbd]">Total Amount</span>
-        <span className="text-white text-xl font-bold">{money(totals)}</span>
+        <span className="text-white text-xl font-bold">{formatVND(totals)}</span>
       </div>
 
       {/* Action Buttons */}

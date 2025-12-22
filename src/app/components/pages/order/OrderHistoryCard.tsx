@@ -2,9 +2,8 @@
 
 import Image from "next/image";
 import { OrderItemView } from "./order-view.type";
+import { formatVND } from "@/app/hook/money";
 
-const money = (n: number) =>
-  `$${Math.max(0, n).toFixed(2).replace(/\.00$/, "")}`;
 
 export type OrderHistoryCardProps = {
   orderId: string;
@@ -83,11 +82,11 @@ const statusLabel = statusLabelMap[status] ?? status;
           <div className="flex items-center gap-2 mt-2">
             {first.discount ? (
               <>
-                <span className="text-[#8a8a8a] line-through text-sm">{money(first.price)}</span>
-                <span className="text-white text-base font-medium">{money(finalUnit)}</span>
+                <span className="text-[#8a8a8a] line-through text-sm">{formatVND(first.price)}</span>
+                <span className="text-white text-base font-medium">{formatVND(finalUnit)}</span>
               </>
             ) : (
-              <span className="text-white text-base font-medium">{money(first.price)}</span>
+              <span className="text-white text-base font-medium">{formatVND(first.price)}</span>
             )}
           </div>
 
@@ -113,7 +112,7 @@ const statusLabel = statusLabelMap[status] ?? status;
 
         <div className="flex items-baseline gap-2">
           <span className="text-[#bdbdbd] text-sm">Order Total:</span>
-          <span className="text-white text-lg font-bold">{money(totals.total)}</span>
+          <span className="text-white text-lg font-bold">{formatVND(totals.total)}</span>
         </div>
       </div>
     </div>
