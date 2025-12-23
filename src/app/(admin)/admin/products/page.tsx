@@ -1,22 +1,59 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react"; // 1. Import useEffect
 import { useRouter } from "next/navigation";
 import FilterSection, {
   FilterItem,
-} from "@/app/components/admin/bar/FilterBar"; // Đã sửa lại đường dẫn gọn hơn
+} from "@/app/components/admin/bar/FilterBar";
 import AppliedBar from "@/app/components/admin/bar/AppliedBar";
 import ProductList from "./ProductList";
 import { api } from "@/app/services/api";
 
+// Định nghĩa interface cho Category
+interface Category {
+  _id: string;
+  name: string;
+}
+
 export default function ProductsPage() {
   const router = useRouter();
 
-  // 1. Quản lý trạng thái Selection và Reload
+  // 1. Quản lý trạng thái Selection, Reload và Danh mục
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [categoryOptions, setCategoryOptions] = useState<
+    { label: string; value: string }[]
+  >([
+    { label: "Danh Mục", value: "" }, // Giá trị mặc định
+  ]);
 
-  // 2. Cấu hình bộ lọc
+  // 2. Call API lấy danh sách danh mục
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        // Thay đổi URL nếu cần thiết, ở đây dùng endpoint bạn cung cấp
+        const data = await api.get<Category[]>("/api/categories");
+
+        // Map dữ liệu từ API sang định dạng cho FilterItem
+        const formattedCategories = data.map((cat) => ({
+          label: cat.name,
+          value: cat._id, // Sử dụng ID để lọc chính xác
+        }));
+
+        // Cập nhật state với option mặc định ở đầu
+        setCategoryOptions([
+          { label: "Danh Mục", value: "" },
+          ...formattedCategories,
+        ]);
+      } catch (error) {
+        console.error("Lỗi khi fetch categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // 3. Cấu hình bộ lọc (Sử dụng dữ liệu từ categoryOptions)
   const filters: FilterItem[] = [
     {
       type: "select",
@@ -35,12 +72,7 @@ export default function ProductsPage() {
     {
       type: "select",
       queryKey: "category",
-      options: [
-        { label: "Danh Mục", value: "" },
-        { label: "Action", value: "action" },
-        { label: "RPG", value: "rpg" },
-        { label: "Adventure", value: "adventure" },
-      ],
+      options: categoryOptions, // Dữ liệu động từ API
     },
     {
       type: "select",
@@ -54,14 +86,13 @@ export default function ProductsPage() {
     },
   ];
 
-  // 3. Xử lý hành động từ AppliedBar
+  // 4. Xử lý hành động từ AppliedBar
   const handleApplyAction = async (action: string) => {
     if (selectedIds.length === 0) {
       alert("Vui lòng chọn ít nhất một sản phẩm!");
       return;
     }
 
-    // Chỉ xử lý hành động xóa
     if (action === "delete") {
       const confirm = window.confirm(
         `CẢNH BÁO: Bạn có chắc muốn xóa ${selectedIds.length} sản phẩm đã chọn vào thùng rác?`
@@ -69,14 +100,13 @@ export default function ProductsPage() {
       if (!confirm) return;
 
       try {
-        // Gọi API Soft Delete (Patch) cho từng sản phẩm
         await Promise.all(
           selectedIds.map((id) => api.patch(`/api/product/deleted/${id}`))
         );
 
         alert("Đã chuyển các sản phẩm đã chọn vào thùng rác!");
-        setSelectedIds([]); // Reset selection
-        setRefreshTrigger((prev) => prev + 1); // Trigger reload table
+        setSelectedIds([]);
+        setRefreshTrigger((prev) => prev + 1);
         router.refresh();
       } catch (error) {
         console.error("Lỗi khi xóa sản phẩm:", error);
@@ -96,7 +126,6 @@ export default function ProductsPage() {
       <AppliedBar
         linktocreate="/admin/products/create"
         onApplyAction={handleApplyAction}
-        // trigger={0} // Mặc định hiển thị nút Thùng rác
       />
 
       <ProductList
@@ -107,4 +136,3 @@ export default function ProductsPage() {
     </div>
   );
 }
-  

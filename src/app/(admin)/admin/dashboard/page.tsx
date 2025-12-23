@@ -12,25 +12,21 @@ export default function Dashboard() {
   });
   const [loading, setLoading] = useState(true);
 
-  // Hàm format tiền tệ
+  // ✅ ĐÃ CẬP NHẬT: Hàm format tiền tệ sang VND
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("vi-VN", {
       style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 2,
+      currency: "VND",
     }).format(value);
   };
 
   useEffect(() => {
-    // Hàm wrapper để fetch kèm credentials
     const fetchWithAuth = (url: string) => {
       return fetch(url, {
         method: "GET",
-        credentials: "include", // Quan trọng: Gửi kèm Cookies/Session
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          // Nếu dùng Bearer Token thủ công thì uncomment dòng dưới:
-          // "Authorization": `Bearer ${localStorage.getItem('token')}`,
         },
       });
     };
@@ -43,7 +39,6 @@ export default function Dashboard() {
           fetchWithAuth("http://localhost:4000/api/order/revenue"),
         ]);
 
-        // Kiểm tra nếu request lỗi (ví dụ 401 Unauthorized)
         if (!usersRes.ok || !ordersRes.ok || !revenueRes.ok) {
           throw new Error("Lỗi xác thực hoặc lỗi server");
         }
@@ -52,8 +47,6 @@ export default function Dashboard() {
         const orderData = await ordersRes.json();
         const revenueData = await revenueRes.json();
 
-        // Xử lý dữ liệu trả về (cần check kỹ format JSON trả về từ backend)
-        // Ví dụ: API trả về số trực tiếp hoặc object { count: 10 }
         setStats({
           users:
             typeof userData === "number"

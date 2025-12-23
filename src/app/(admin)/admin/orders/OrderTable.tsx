@@ -4,8 +4,6 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/app/services/api";
 
-// --- Interfaces ---
-// Vẫn giữ props để tránh lỗi ở file cha (page.tsx), nhưng không dùng tới trong UI nữa
 interface OrderTableProps {
   selectedIds: string[];
   setSelectedIds: (ids: string[]) => void;
@@ -28,23 +26,21 @@ interface Order {
 }
 
 export default function OrderTable({
-  // Các props này hiện tại không còn tác dụng trong UI vì đã bỏ checkbox
   selectedIds,
   setSelectedIds,
   refreshTrigger,
 }: OrderTableProps) {
   const searchParams = useSearchParams();
 
-  // State
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [displayedOrders, setDisplayedOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // --- Helper Functions ---
+  // --- ✅ ĐÃ CẬP NHẬT: Hàm format tiền tệ sang VND ---
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("vi-VN", {
       style: "currency",
-      currency: "USD",
+      currency: "VND",
     }).format(amount);
   };
 
@@ -84,7 +80,6 @@ export default function OrderTable({
     );
   };
 
-  // --- Fetch Data ---
   const fetchOrders = async () => {
     try {
       setLoading(true);
@@ -118,7 +113,6 @@ export default function OrderTable({
     fetchOrders();
   }, [refreshTrigger]);
 
-  // --- Filter Logic ---
   useEffect(() => {
     if (!allOrders || allOrders.length === 0) {
       if (displayedOrders.length > 0) setDisplayedOrders([]);
@@ -174,14 +168,12 @@ export default function OrderTable({
         <table className="w-full min-w-[1000px] border-collapse text-left text-sm text-gray-600">
           <thead className="bg-gray-50 text-gray-900 font-bold uppercase text-xs border-b border-gray-200">
             <tr>
-              {/* ĐÃ XÓA CỘT CHECKBOX */}
               <th className="px-6 py-4">Mã đơn</th>
               <th className="px-6 py-4">Thông tin khách</th>
               <th className="px-6 py-4 w-[35%]">Sản phẩm</th>
               <th className="px-6 py-4">Thanh toán</th>
               <th className="px-6 py-4 text-center">Trạng thái</th>
               <th className="px-6 py-4 text-center">Ngày đặt</th>
-              {/* ĐÃ XÓA CỘT HÀNH ĐỘNG */}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -192,7 +184,6 @@ export default function OrderTable({
                   key={order._id}
                   className="hover:bg-gray-50 transition-colors duration-200"
                 >
-                  {/* ĐÃ XÓA CELL CHECKBOX */}
                   <td className="px-6 py-4 align-top">
                     <span className="font-bold text-blue-600">
                       #{order._id?.slice(-6).toUpperCase()}
@@ -277,7 +268,6 @@ export default function OrderTable({
                     <div className="text-sm font-semibold">{time}</div>
                     <div className="text-xs text-gray-500">{date}</div>
                   </td>
-                  {/* ĐÃ XÓA CELL HÀNH ĐỘNG */}
                 </tr>
               );
             })}

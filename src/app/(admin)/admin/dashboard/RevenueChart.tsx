@@ -14,7 +14,6 @@ export default function RevenueChart() {
   const chartRef = useRef<HTMLCanvasElement | null>(null);
   const chartInstanceRef = useRef<Chart | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
-  // Lấy tháng hiện tại làm mặc định (YYYY-MM)
   const [selectedMonth, setSelectedMonth] = useState(
     new Date().toISOString().slice(0, 7)
   );
@@ -63,7 +62,6 @@ export default function RevenueChart() {
       const revenueArray = new Array(daysInMonth).fill(0);
 
       orders.forEach((order) => {
-        // ✅ CHỈ LẤY NHỮNG ORDER CÓ STATUS LÀ PAID
         if (order.status !== "paid") return;
 
         const orderDate = new Date(order.createdAt);
@@ -71,7 +69,6 @@ export default function RevenueChart() {
 
         if (orderMonthYear === monthYear) {
           const day = orderDate.getDate();
-          // Đảm bảo không vượt quá mảng (phòng trường hợp múi giờ nhảy ngày)
           if (day <= daysInMonth) {
             revenueArray[day - 1] += order.totalPrice;
           }
@@ -81,8 +78,6 @@ export default function RevenueChart() {
     };
 
     const currentMonthData = getRevenueByDay(selectedMonth);
-
-    // Tính toán tháng trước đó để so sánh
     const [year, month] = selectedMonth.split("-").map(Number);
     const prevDate = new Date(year, month - 2);
     const prevMonthString = prevDate.toISOString().slice(0, 7);
@@ -120,7 +115,7 @@ export default function RevenueChart() {
             borderDash: [5, 5],
             tension: 0.4,
             fill: false,
-            pointRadius: 0, // Ẩn điểm cho tháng trước để đỡ rối
+            pointRadius: 0,
           },
         ],
       },
@@ -131,9 +126,9 @@ export default function RevenueChart() {
           tooltip: {
             callbacks: {
               label: (context) => {
-                // Lấy giá trị y, nếu null thì mặc định là 0
                 const value = context.parsed.y ?? 0;
-                return `Doanh thu: $${value.toLocaleString()}`;
+                // ✅ ĐÃ CẬP NHẬT: Format Tooltip sang VND
+                return `Doanh thu: ${value.toLocaleString("vi-VN")} ₫`;
               },
             },
           },
@@ -144,10 +139,12 @@ export default function RevenueChart() {
             grid: { display: false },
           },
           y: {
-            title: { display: true, text: "Doanh thu ($)" },
+            // ✅ ĐÃ CẬP NHẬT: Title trục Y sang VND
+            title: { display: true, text: "Doanh thu (VND)" },
             beginAtZero: true,
             ticks: {
-              callback: (value) => "$" + value.toLocaleString(),
+              // ✅ ĐÃ CẬP NHẬT: Định dạng số trên trục Y
+              callback: (value) => value.toLocaleString("vi-VN") + " ₫",
             },
           },
         },
@@ -167,9 +164,7 @@ export default function RevenueChart() {
           <h2 className="font-bold text-[24px] text-gray-900">
             Báo cáo Doanh thu Thực tế
           </h2>
-          <p className="text-gray-500 text-sm">
-            Chỉ bao gồm các đơn hàng đã thanh toán thành công.
-          </p>
+          {/* ✅ ĐÃ XÓA: Dòng chữ "Chỉ bao gồm các đơn hàng đã thanh toán thành công" */}
         </div>
         <input
           type="month"
